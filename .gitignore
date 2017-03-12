@@ -1,0 +1,10 @@
+*.swp
+*.swo
+*.pyc
+*.cache
+venv-ivtdash/
+app.db
+db_repository/
+*.sqlite
+tmp/
+logs/
