@@ -8,3 +8,4 @@ db_repository/
 *.sqlite
 tmp/
 logs/
+*.egg-info
