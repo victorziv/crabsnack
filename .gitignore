@@ -2,7 +2,7 @@
 *.swo
 *.pyc
 *.cache
-venv-ivtdash/
+*venv/
 app.db
 db_repository/
 *.sqlite
