@@ -10,6 +10,6 @@ def create_app():
 
     @app.route('/')
     def index():
-        return "What's up!"
+        return "What's up in the base {}?".format(app.config['BASEDIR'])
 
     return app

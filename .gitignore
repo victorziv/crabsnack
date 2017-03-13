@@ -9,3 +9,4 @@ db_repository/
 tmp/
 logs/
 *.egg-info
+venv*
