@@ -2,6 +2,11 @@ import os
 from flask import Flask
 
 
+def joke():
+    return (u'Quelles sont les deux plus vieilles lettres de l’alphabet?'
+            u'Beiherhund das Oder die Flipperwaldt gersput.')
+
+
 def create_app():
     app = Flask(__name__)
     app.config['DEBUG'] = True
