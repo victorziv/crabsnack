@@ -3,6 +3,14 @@ from setuptools import setup
 setup(
     name='Crabsnack',
     version='0.1',
+
+    classifiers=[
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+    ],
+
     description='The best sea food in the world',
     include_package_data=True,
     url='http://github.com/victorziv/crabsnack',
