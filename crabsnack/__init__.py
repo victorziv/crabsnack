@@ -1,10 +1,6 @@
 import os
 from flask import Flask
-
-
-def joke():
-    return (u'Quelles sont les deux plus vieilles lettres de l’alphabet?'
-            u'Beiherhund das Oder die Flipperwaldt gersput.')
+from .text import joke # noqa
 
 
 def create_app():
