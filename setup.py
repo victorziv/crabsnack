@@ -4,7 +4,7 @@ import functools
 
 _in_dir = functools.partial(os.path.join, os.path.dirname(__file__))
 
-with open(_in_dir("crabsnack", "__version__.py")) as vf:
+with open(_in_dir("crabsnack", "version.py")) as vf:
     exec(vf.read())
 # ___________________________________
 
