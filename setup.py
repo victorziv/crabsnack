@@ -1,14 +1,23 @@
+import os
 from setuptools import setup
+import functools
+
+_in_dir = functools.partial(os.path.join, os.path.dirname(__file__))
+
+with open(_in_dir("crabsnack", "__version__.py")) as vf:
+    exec(vf.read())
+# ___________________________________
 
 
 def readme():
     with open('README.rst', 'rb') as f:
         return f.read()
+# ___________________________________
 
 
 setup(
     name='Crabsnack',
-    version='0.1.1',
+    version=__version__, # noqa
     description='The best sea food in the world',
     long_description=readme(),
 
