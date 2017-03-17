@@ -2,7 +2,7 @@ import os
 from setuptools import setup
 import functools
 
-_in_dir = functools.partial(os.path.join, os.path.dirname(__file__))
+_in_dir = functools.partial(os.path.join, os.path.dirname(__file__)) # bla bla bla bla 
 
 with open(_in_dir("crabsnack", "version.py")) as vf:
     exec(vf.read())
@@ -37,5 +37,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'markdown',
-    ]
+    ],
+    test_suite='pytest',
+    test_require=['pytest']
 )

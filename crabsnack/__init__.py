@@ -1,6 +1,6 @@
 import os
 from flask import Flask
-from .text import joke # noqa
+from .text import (joke, jokem) # noqa
 from .version import __version__ # noqa
 
 
