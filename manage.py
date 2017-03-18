@@ -7,7 +7,13 @@ manager = Manager(app)
 
 @manager.command
 def hello():
+    """ Welcoming heartily. """
     print("Welcome to the wonderful world of Flask-Script")
+
+
+@manager.option('-n', '--name', help="Enter your name, please")
+def hi(name):
+    print("Hi there, {}".format(name))
 
 
 if __name__ == '__main__':
