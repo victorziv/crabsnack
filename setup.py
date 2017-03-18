@@ -1,11 +1,6 @@
-"""
-Pytest integration as suggested by Jeff Knupp in his sandman app.
-!!!! Doesn't work for me.
-"""
 import os
 import sys
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
 import functools
 
 _in_dir = functools.partial(os.path.join, os.path.dirname(__file__))
@@ -20,19 +15,23 @@ def readme():
         return f.read()
 # ___________________________________
 
+#         'flake8',
+#         'coverage'
 
-class PyTest(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = ['--strict', '--verbose', '-tb=long', 'crabsnack/tests']
 
-    def run_tests(self):
-        import pytest
-        errno = pytest.main(self.test_args)
-        sys.exit(errno)
-
+if sys.argv[-1] == 'test':
+    test_requirements = [
+        'pytest',
+    ]
+    try:
+        modules = map(__import__, test_requirements)
+    except ImportError as ie:
+        errmsg = ie.message.replace("No module named ", "")
+        msg = "%s is not installed. Install your test requirements." % errmsg
+        raise ImportError(msg)
+    os.system('pytest')
+    sys.exit()
 # ___________________________________
-
 
 setup(
     name='Crabsnack',
@@ -45,7 +44,6 @@ setup(
         "Programming Language :: Python :: 3",
     ],
 
-    cmdclass={'test': PyTest},
     include_package_data=True,
     url='http://github.com/victorziv/crabsnack',
     author='Eugene H. Krabs',
@@ -55,10 +53,5 @@ setup(
     zip_safe=False,
     install_requires=[
         'markdown',
-    ],
-    test_suite='crabsnack',
-    test_require=['pytest'],
-    extras_require={
-        'testing': ['pytest']
-    }
+    ]
 )
