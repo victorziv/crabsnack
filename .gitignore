@@ -9,5 +9,5 @@ db_repository/
 tmp/
 logs/
 *.egg-info
-build/
 dist/
+build/
