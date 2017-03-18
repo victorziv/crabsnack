@@ -1,3 +1,7 @@
+"""
+Pytest integration as suggested by Jeff Knupp in his sandman app.
+!!!! Doesn't work for me.
+"""
 import os
 import sys
 from setuptools import setup
@@ -41,6 +45,7 @@ setup(
         "Programming Language :: Python :: 3",
     ],
 
+    cmdclass={'test': PyTest},
     include_package_data=True,
     url='http://github.com/victorziv/crabsnack',
     author='Eugene H. Krabs',
@@ -51,8 +56,9 @@ setup(
     install_requires=[
         'markdown',
     ],
-    test_suite='pytest',
+    test_suite='crabsnack',
     test_require=['pytest'],
-
-
+    extras_require={
+        'testing': ['pytest']
+    }
 )
