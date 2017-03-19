@@ -11,17 +11,16 @@ with open(_in_dir("crabsnack", "version.py")) as vf:
 
 
 def readme():
-    with open('README.rst', 'rb') as f:
+    with open('README.rst', 'r') as f:
         return f.read()
 # ___________________________________
-
-#         'flake8',
-#         'coverage'
 
 
 if sys.argv[-1] == 'test':
     test_requirements = [
         'pytest',
+        'flake8',
+        'coverage'
     ]
     try:
         modules = map(__import__, test_requirements)
@@ -35,7 +34,7 @@ if sys.argv[-1] == 'test':
 
 setup(
     name='Crabsnack',
-    version=__version__,  # noqa
+    version=__version__,  # NOQA
     description='The best sea food in the world',
     long_description=readme(),
 
