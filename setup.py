@@ -11,17 +11,16 @@ with open(_in_dir("crabsnack", "version.py")) as vf:
 
 
 def readme():
-    with open('README.rst', 'rb') as f:
+    with open('README.rst', 'r') as f:
         return f.read()
 # ___________________________________
-
-#         'flake8',
-#         'coverage'
 
 
 if sys.argv[-1] == 'test':
     test_requirements = [
         'pytest',
+        'flake8',
+        'coverage'
     ]
     try:
         modules = map(__import__, test_requirements)
@@ -53,5 +52,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'markdown',
-    ]
+    ],
+    entry_points={
+        'console_scripts': ['crabtalks = crabsnack.command_line:main'],
+    }
+
 )
