@@ -1,5 +1,5 @@
 import os
-import sys
+# import sys
 from setuptools import setup
 import functools
 
@@ -16,25 +16,9 @@ def readme():
 # ___________________________________
 
 
-if sys.argv[-1] == 'test':
-    test_requirements = [
-        'pytest',
-        'flake8',
-        'coverage'
-    ]
-    try:
-        modules = map(__import__, test_requirements)
-    except ImportError as ie:
-        errmsg = ie.message.replace("No module named ", "")
-        msg = "%s is not installed. Install your test requirements." % errmsg
-        raise ImportError(msg)
-    os.system('pytest')
-    sys.exit()
-# ___________________________________
-
 setup(
     name='Crabsnack',
-    version=__version__,  # flake8:ignore
+    version=__version__,  # noqa
     description='The best sea food in the world',
     long_description=readme(),
 
@@ -46,11 +30,20 @@ setup(
     include_package_data=True,
     url='http://github.com/victorziv/crabsnack',
     author='Eugene H. Krabs',
-    author_email='mrkrabs@bottom.com',
+    author_email='mrkrabs@bottomup.com',
     license='MIT',
     packages=['crabsnack'],
     zip_safe=False,
     install_requires=[
         'markdown',
-    ]
+    ],
+    tests_require=['pytest'],
+    setup_requires=['pytest-runner'],
+    entry_points={
+        'console_scripts': [
+            'crabtalks = crabsnack.command_line:main',
+            'crab = crabsnack.__main__:main'
+        ],
+    }
+
 )
