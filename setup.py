@@ -54,7 +54,10 @@ setup(
         'markdown',
     ],
     entry_points={
-        'console_scripts': ['crabtalks = crabsnack.command_line:main'],
+        'console_scripts': [
+            'crabtalks = crabsnack.command_line:main',
+            'crab = crabsnack.__main__:main'
+        ],
     }
 
 )
