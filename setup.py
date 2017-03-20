@@ -34,7 +34,7 @@ if sys.argv[-1] == 'test':
 
 setup(
     name='Crabsnack',
-    version=__version__,  # flake8:ignore
+    version=__version__,   # noqa
     description='The best sea food in the world',
     long_description=readme(),
 
