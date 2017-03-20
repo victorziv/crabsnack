@@ -1,5 +1,5 @@
 import sys
-from . import create_app
+from crabsnack import create_app
 
 
 def main(args=None):
@@ -9,4 +9,8 @@ def main(args=None):
 
     print("Starting the crabsnack server")
     app = create_app()
-    sys.exit(app.run())
+    app.run()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
