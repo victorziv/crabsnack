@@ -8,3 +8,10 @@ Going easy on abstraction wrappers both on the backend and frontend sides.
 Frontend - no MVC framework however fancy it appears to be.
 
 Backend - an ORM wrapper is out.
+
+Installation
+............
+
+`
+pip install crabsnack
+`
