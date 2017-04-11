@@ -101,6 +101,7 @@ class QueryUser(object):
             self.db.cur.execute(query, params)
             self.db.conn.commit()
             fetch = self.db.cur.fetchone()
+            print("XXXXX==> FETCH: {}".format(fetch))
             return fetch['id']
 
         except IntegrityError as ie:

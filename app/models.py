@@ -68,8 +68,6 @@ class RoleModel(BaseModel):
     """
     __tablename__ = 'roles'
 
-    def __repr__(self):
-        return '<Role %r>' % self.name
     # ____________________________
 
     def __init__(self):
@@ -192,7 +190,8 @@ class AnonymousUserModel(AnonymousUserMixin):
         An anonymous user is not going to have permissions to do anything in our environment.
 
         :Steps:
-            #. We are generally repelled by the folks that don't care to introduce themselves properly.
+            #. We are generally repelled by the folks
+                that don't care to introduce themselves properly.
             #. It's even worse when they do it on the phone.
 
         :Args:
@@ -235,10 +234,6 @@ class UserModel(UserMixin, BaseModel):
     name = db.Column(db.String(64))
     location = db.Column(db.String(64))
     """
-    # __________________________________
-
-    def __repr__(self):
-        return '<User %r>' % self.username
     # __________________________________
 
     def __init__(self):
@@ -309,27 +304,26 @@ class UserModel(UserMixin, BaseModel):
         ]
 
         for u in users:
-            User().save_user(**u)
+            UserModel().save_user(**u)
 
     # __________________________________
 
     def save_user(self, email, username, password, role='user'):
-        self.email = email
-        self.username = username
-        self.password = password
 
         # Set user role
         if role.lower() == 'admin':
             # user is an administrator
-            self.role = Role().get_by_field(name='permissions', value=0xFF)
+            role = RoleModel().get_by_field(name='permissions', value=0xFF)
         else:
-            self.role = Role().get_by_field(name='name', value=role.lower())
+            role = RoleModel().get_by_field(name='name', value=role.lower())
+
+        password_hash = generate_password_hash(password)
 
         new_user_id = self.query.create(
-            email=self.email,
-            username=self.username,
-            password_hash=self.password_hash,
-            role_id=self.role['id']
+            email=email,
+            username=username,
+            password_hash=password_hash,
+            role_id=role['id']
         )
 
         print("New user ID: %r" % new_user_id)
@@ -394,4 +388,4 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User().get_by_field(name='id', value=user_id)
+    return UserModel().get_by_field(name='id', value=user_id)

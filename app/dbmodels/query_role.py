@@ -1,6 +1,6 @@
 from __future__ import print_function
 import inspect
-from psycopg2 import DatabaseError
+from psycopg2 import DatabaseError, ProgrammingError
 from psycopg2.extensions import AsIs
 
 # ============================================
@@ -33,18 +33,17 @@ class QueryRole:
         try:
             self.db.cur.execute(query, params)
 
+        except ProgrammingError as pe:
+            print('ERROR: {}'.format(pe))
+            return
         except DatabaseError as e:
             print('ERROR: %s' % e)
             self.db.conn.rollback()
 
         fetch = self.db.cur.fetchone()
-        if fetch is None:
-            return fetch
-
-        print("Fetch: %r" % fetch)
+        print("Fetch: {}".format(fetch))
         return fetch
     # ____________________________
-
 
     def read(self, **kwargs):
         raise RuntimeError("Not implemented")
@@ -58,7 +57,7 @@ class QueryRole:
         """
 
         query = """
-            INSERT INTO roles (name, isdefault, permissions) 
+            INSERT INTO roles (name, isdefault, permissions)
             VALUES (%s, %s, %s)
             RETURNING id
         """
@@ -73,9 +72,5 @@ class QueryRole:
         except DatabaseError as e:
             print('ERROR: %s' % e)
             self.db.conn.rollback()
-            return 
+            return
     # ____________________________
-
-
-
-

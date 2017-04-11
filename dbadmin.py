@@ -2,7 +2,7 @@ import os
 import glob
 import datetime
 import psycopg2
-import psycopg2.extras
+from psycopg2.extras import DictCursor
 from psycopg2 import DatabaseError, IntegrityError
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, AsIs
 from flask import current_app
@@ -259,9 +259,9 @@ class DBAdmin(object):
     # _____________________________
 
     def init_app(self, app):
-        print("!!!!! app config: {}".format(app.config['DB_CONN_URI']))
         self.conn = DBAdmin.connectdb(app.config['DB_CONN_URI'])
         app.db = self
+        app.db.cur = self.conn.cursor(cursor_factory=DictCursor)
         return app
     # _____________________________
 
