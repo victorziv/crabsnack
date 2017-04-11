@@ -1,7 +1,8 @@
 #!/bin/bash
 
 CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-VENVDIR=$CURDIR/venv-ivtdash
+VENVDIR=$CURDIR/venv-crab
+# _________________________
 
 install_modules() {
     cd ${CURDIR}
@@ -10,13 +11,11 @@ install_modules() {
     deactivate
 
 }
-
 # _________________________
 
 set_pythonpath() {
     echo "export PYTHONPATH=$CURDIR" >> ${VENVDIR}/bin/activate
 }
-
 # _________________________
 
 main() {
@@ -24,5 +23,6 @@ main() {
     set_pythonpath
     install_modules
 }
+# _________________________
 
 main "$@"
