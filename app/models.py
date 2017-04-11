@@ -388,4 +388,5 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    return UserModel().get_by_field(name='id', value=user_id)
+    userd = UserModel().get_by_field(name='id', value=user_id)
+    return User(**userd)
