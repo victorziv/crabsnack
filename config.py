@@ -5,13 +5,13 @@ import logging
 
 class Config:
     BASEDIR = os.path.abspath(os.path.dirname(__file__))
-    PROJECT = 'ivt'
-    PROJECT_USER = 'ivt'
-    APP = 'dashboard'
+    PROJECT = 'crabsnack'
+    PROJECT_USER = 'krabs'
+    APP = 'crabtest'
     SECRET_KEY = os.environ.get('SECRET_KEY') \
         or 'comment aller a la gare central'
-    IVT_ADMIN = os.environ.get('IVT_ADMIN') \
-        or '%s@infinidat.com' % PROJECT_USER
+    CRAB_ADMIN = os.environ.get('CRAB_ADMIN') \
+        or '%s@nowhere.com' % PROJECT_USER
 
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 465
@@ -19,9 +19,9 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 
-    IVT_MAIL_SUBJECT_PREFIX = '[%s]' % PROJECT.capitalize()
-    IVT_MAIL_SENDER = 'IVT Admin %s' % IVT_ADMIN
-    IVT_TEST_OWNER_DEFAULT = '%s@infinidat.com' % PROJECT_USER
+    MAIL_SUBJECT_PREFIX = '[%s]' % PROJECT.capitalize()
+    MAIL_SENDER = 'Admin %s' % CRAB_ADMIN
+    TEST_OWNER_DEFAULT = '%s@nowhere.com' % PROJECT_USER
 
     DBHOST = 'localhost'
     DBPORT = 5442
