@@ -12,13 +12,6 @@ from app.dbmodels.query_installation import QueryInstallation
 # ===========================
 
 
-Role = namedtuple(
-    'Role',
-    ['id', 'name', 'default']
-)
-# ===========================
-
-
 class Permission:
     VIEW_REPORT = 0x01          # 0b00000001
     RUN_CASE = 0x02             # 0b00000010
@@ -45,7 +38,7 @@ class BaseModel(object):
 # ===========================
 
 
-class RoleModel(BaseModel):
+class Role(BaseModel):
 
     """
 
@@ -167,20 +160,7 @@ class InstallationModel(BaseModel):
 # ===========================
 
 
-User = namedtuple(
-    'User',
-    ['id', 'username', 'email', 'password_hash', 'role', 'permissions']
-)
-# ____________________________________
-
-AnonymousUser = namedtuple(
-    'AnonymousUser',
-    []
-)
-# ____________________________________
-
-
-class AnonymousUserModel(AnonymousUserMixin):
+class AnonymousUser(AnonymousUserMixin):
 
     # ____________________________
 
@@ -215,13 +195,17 @@ class AnonymousUserModel(AnonymousUserMixin):
         return False
     # ____________________________
 
-    def is_admin(self):
+    def is_administrator(self):
         return False
+
+    def is_authenticated(self):
+        return False
+
 
 # ===========================
 
 
-class UserModel(UserMixin, BaseModel):
+class User(UserMixin, BaseModel):
 
     """
     __tablename__ = 'users'
@@ -236,7 +220,8 @@ class UserModel(UserMixin, BaseModel):
     """
     # __________________________________
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
         self.query = QueryUser(db)
     # __________________________________
 
@@ -304,7 +289,7 @@ class UserModel(UserMixin, BaseModel):
         ]
 
         for u in users:
-            UserModel().save_user(**u)
+            User().save_user(**u)
 
     # __________________________________
 
@@ -313,9 +298,9 @@ class UserModel(UserMixin, BaseModel):
         # Set user role
         if role.lower() == 'admin':
             # user is an administrator
-            role = RoleModel().get_by_field(name='permissions', value=0xFF)
+            role = Role().get_by_field(name='permissions', value=0xFF)
         else:
-            role = RoleModel().get_by_field(name='name', value=role.lower())
+            role = Role().get_by_field(name='name', value=role.lower())
 
         password_hash = generate_password_hash(password)
 
@@ -388,5 +373,5 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    userd = UserModel().get_by_field(name='id', value=user_id)
+    userd = User().get_by_field(name='id', value=user_id)
     return User(**userd)

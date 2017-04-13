@@ -1,9 +1,9 @@
 import os
 import glob
-import datetime
+# import datetime
 import psycopg2
 from psycopg2.extras import DictCursor
-from psycopg2 import DatabaseError, IntegrityError
+# from psycopg2 import DatabaseError, IntegrityError
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, AsIs
 from flask import current_app
 # ========================================
@@ -244,6 +244,14 @@ class DBAdmin(object):
 
     # _____________________________
 
+    def create_tables(self):
+        tables = current_app.config['DB_TABLES_BASELINE']
+        for table in tables:
+            self.drop_table(table)
+            getattr(self, "create_table_%s" % table)()
+            self.grant_access_to_table(table)
+    # ____________________________
+
     def create_baseline(self, conn):
         version = '0000'
         name = 'baseline'
@@ -314,54 +322,54 @@ class DBAdmin(object):
 #    # ____________________________
 
 
-class Baseline(object):
+# class Baseline(object):
 
-    def __init__(self, db):
-        self.db = db
+#     def __init__(self, db):
+#         self.db = db
 
     # ____________________________
 
-    def create_tables(self):
-        tables = current_app.config['DB_TABLES_BASELINE']
-        for table in tables:
-            self.db.drop_table(table)
-            getattr(self.db, "create_table_%s" % table)()
-            self.db.grant_access_to_table(table)
+#     def create_tables(self):
+#         tables = current_app.config['DB_TABLES_BASELINE']
+#         for table in tables:
+#             self.db.drop_table(table)
+#             getattr(self.db, "create_table_%s" % table)()
+#             self.db.grant_access_to_table(table)
     # ____________________________
 
-    def insert_base_version(self):
+#     def insert_base_version(self):
 
-        """
-        """
+#         """
+#         """
 
-        query = """
-            INSERT INTO changelog
-                (version, name, applied)
-            VALUES (%s, %s, %s)
-            RETURNING id
-        """
+#         query = """
+#             INSERT INTO changelog
+#                 (version, name, applied)
+#             VALUES (%s, %s, %s)
+#             RETURNING id
+#         """
 
-        params = (
-            '0000',
-            'initial_baseline',
-            datetime.datetime.now()
-        )
+#         params = (
+#             '0000',
+#             'initial_baseline',
+#             datetime.datetime.now()
+#         )
 
-        try:
-            self.db.cur.execute(query, params)
-            self.db.conn.commit()
-            fetch = self.db.cur.fetchone()
-            return fetch['id']
+#         try:
+#             self.db.cur.execute(query, params)
+#             self.db.conn.commit()
+#             fetch = self.db.cur.fetchone()
+#             return fetch['id']
 
-        except IntegrityError as ie:
-            print('ERROR: %s' % ie)
-            self.db.conn.rollback()
-            return
-        except DatabaseError as dbe:
-            print('ERROR: %s' % dbe)
-            self.db.conn.rollback()
-            return
-    # ____________________________
+#         except IntegrityError as ie:
+#             print('ERROR: %s' % ie)
+#             self.db.conn.rollback()
+#             return
+#         except DatabaseError as dbe:
+#             print('ERROR: %s' % dbe)
+#             self.db.conn.rollback()
+#             return
+#     ____________________________
 
 # def set_baseline():
 
