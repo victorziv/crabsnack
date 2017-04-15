@@ -59,7 +59,13 @@ class Config:
         '%(lineno)d'
     ])
 
-    LOGGING_FORMAT += '\t\t%(message)s'
+    LOGGING_FORMAT += '\t\t%(message)s',
+
+    OAUTH_CREDENTIALS = {
+        'facebook': {},
+        'twitter': {},
+        'google': {}
+    }
 
     # ___________________________________________
 
