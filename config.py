@@ -62,9 +62,12 @@ class Config:
     LOGGING_FORMAT += '\t\t%(message)s',
 
     OAUTH_CREDENTIALS = {
-        'facebook': {},
-        'twitter': {},
-        'google': {}
+        "facebook": {},
+        "twitter": {
+            "id": "zwY4WSnGxv9nLz0RZnBsMpQPH",
+            "secret": "wiekiIXApl03P47xGSLFezJb6rzTvQdEL4mQJ3Fim7fNJNN344"
+        },
+        "google": {}
     }
 
     # ___________________________________________

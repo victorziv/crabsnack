@@ -1,3 +1,4 @@
+from rauth import OAuth1Service
 from flask import url_for
 from flask import current_app
 
@@ -36,7 +37,17 @@ class FacebookSignIn(OAuthSignIn):
 
 
 class TwitterSignIn(OAuthSignIn):
-    pass
+    def __init__(self):
+        super(TwitterSignIn, self).__init__('twitter')
+        self.service = OAuth1Service(
+            name='twitter',
+            consumer_key=self.consumer_id,
+            consumer_secret=self.consumer_secret,
+            request_token_url='https://api.twitter.com/oauth/request_token',
+            authorize_url='https://api.twitter.com/oauth/authorize',
+            access_token_url='https://api.twitter.com/oauth/access_token',
+            base_url='https://api.twitter.com/1.1/'
+        )
 
 
 class GoogleSignIn(OAuthSignIn):
