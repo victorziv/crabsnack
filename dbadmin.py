@@ -211,6 +211,8 @@ class DBAdmin(object):
         query = """
             CREATE TABLE IF NOT EXISTS users (
                 id serial PRIMARY KEY,
+                social_id VARCHAR(64) NOT NULL UNIQUE,
+                nickname VARCHAR(64) NOT NULL,
                 email VARCHAR(64) UNIQUE,
                 username VARCHAR(64) UNIQUE,
                 password_hash VARCHAR(128),
