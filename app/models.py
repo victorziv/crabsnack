@@ -1,7 +1,7 @@
 from collections import namedtuple
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import url_for, abort
+from flask import url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import login_manager
 from flask import current_app
@@ -28,7 +28,7 @@ class BaseModel(object):
         kwargs = {name: value}
         modeld = self.query.read_one_by_field(**kwargs)
         if modeld is None:
-            abort(404)
+            return
 
         self.__dict__.update(dict(modeld))
         return self
