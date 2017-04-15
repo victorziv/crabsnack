@@ -30,7 +30,8 @@ class BaseModel(object):
         if modeld is None:
             abort(404)
 
-        return dict(modeld)
+        self.__dict__.update(dict(modeld))
+        return self
     # ___________________________
 
     def clear_table(self):
@@ -197,11 +198,6 @@ class AnonymousUser(AnonymousUserMixin):
 
     def is_administrator(self):
         return False
-
-    def is_authenticated(self):
-        return False
-
-
 # ===========================
 
 
@@ -373,5 +369,4 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    userd = User().get_by_field(name='id', value=user_id)
-    return User(**userd)
+    return User().get_by_field(name='id', value=user_id)

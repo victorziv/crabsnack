@@ -15,14 +15,21 @@ def login():
         app.logger.debug("Trying to fetch user by email: %r", form.email.data)
         user = User().get_by_field(name='email', value=form.email.data)
         app.logger.debug("User found: %r", user)
+        app.logger.debug("User type: {}".format(type(user)))
 
-        if user is not None and hasattr(user, 'id') and user.verify_password(form.password.data):
-            login_user(user, form.remember_me.data)
-            return redirect(request.args.get('next') or url_for('main.index'))
+        try:
+            if user is not None and hasattr(user, 'id') and user.verify_password(form.password.data):
+                app.logger.debug("User {} is verified".format(user))
+                login_user(user, form.remember_me.data)
+                return redirect(request.args.get('next') or url_for('main.index'))
 
-        flash('Invalid username or password')
+            flash('Invalid username or password')
+
+        except Exception:
+            app.logger.exception('!!ERROR')
 
     return render_template('auth/login.html', form=form)
+# _______________________________
 
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -42,6 +49,6 @@ def register():
 @login_required
 def logout():
     logout_user()
-    flash("You have been logged out!")
+#    flash("You have been logged out!")
     return redirect(url_for('main.index'))
 # __________________________________________
