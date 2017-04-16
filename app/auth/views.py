@@ -1,9 +1,20 @@
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, current_user
 from flask import current_app as app
 from flask_login import login_user, logout_user, login_required
 from . import auth
+from .oauth import OAuthSignIn
 from ..models import User
 from .forms import LoginForm, RegistrationForm
+# __________________________________________
+
+
+@auth.route('/authorize/<provider>')
+def oauth_authorize(provider):
+    if not current_user.is_anonymous():
+        redirect(url_for('main.index'))
+
+    oauth = OAuthSignIn.get_provider(provider)
+    return oauth.authorize()
 # __________________________________________
 
 
