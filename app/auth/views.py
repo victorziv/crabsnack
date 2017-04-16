@@ -1,6 +1,6 @@
-from flask import render_template, redirect, request, url_for, flash, current_user
+from flask import render_template, redirect, request, url_for, flash
 from flask import current_app as app
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
 from .oauth import OAuthSignIn
 from ..models import User
@@ -10,11 +10,33 @@ from .forms import LoginForm, RegistrationForm
 
 @auth.route('/authorize/<provider>')
 def oauth_authorize(provider):
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         redirect(url_for('main.index'))
 
     oauth = OAuthSignIn.get_provider(provider)
     return oauth.authorize()
+# __________________________________________
+
+
+@auth.route('/callback/<provider>')
+def oauth_callback(provider):
+
+    if not current_user.is_anonymous:
+        return redirect(url_for('main.index'))
+
+    oauth = OAuthSignIn.get_provider(provider)
+    social_id, username, email = oauth.callback()
+
+    if social_id is None:
+        flash('Authentication failed.')
+        return redirect(url_for('main.index'))
+
+    user = User().get_by_field(name='social_id', value=social_id)
+    if not user:
+        user = User().save_user_oauth(social_id=social_id, nickname=username, email=email)
+
+    login_user(user, True)
+    return redirect(url_for('main.index'))
 # __________________________________________
 
 

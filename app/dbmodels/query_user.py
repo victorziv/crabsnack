@@ -114,6 +114,40 @@ class QueryUser(object):
             return
     # ____________________________
 
+    def create_oauth(self, email, nickname, social_id, role_id):
+        """
+        id = SERIAL primary_key=True)
+        email = String(64), unique=True, index=True
+        username String(64), unique=True, index=True
+        password = String(128), salted SHA1 hash
+        role_id = ObjectId, db.ForeignKey('roles.id'))
+        """
+
+        query = """
+            INSERT INTO users (email, nickname, social_id, role_id)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """
+
+        params = (email, nickname, social_id, role_id)
+
+        try:
+            self.db.cur.execute(query, params)
+            self.db.conn.commit()
+            fetch = self.db.cur.fetchone()
+            print("XXXXX==> FETCH: {}".format(fetch))
+            return fetch['id']
+
+        except IntegrityError as ie:
+            print('ERROR: %s' % ie)
+            self.db.conn.rollback()
+            return
+        except DatabaseError as dbe:
+            print('ERROR: %s' % dbe)
+            self.db.conn.rollback()
+            return
+    # ____________________________
+
     def remove_all_records(self):
         query = """
             DELETE FROM users

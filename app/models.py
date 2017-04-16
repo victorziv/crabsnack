@@ -289,6 +289,29 @@ class User(UserMixin, BaseModel):
 
     # __________________________________
 
+    def save_user_oauth(self, email, nickname, social_id, role='user'):
+
+        # Set user role
+        if role.lower() == 'admin':
+            # user is an administrator
+            role = Role().get_by_field(name='permissions', value=0xFF)
+        else:
+            role = Role().get_by_field(name='name', value=role.lower())
+
+        new_user_id = self.query.create_oauth(
+            email=email,
+            nickname=nickname,
+            social_id=social_id,
+            role_id=role.id
+        )
+
+        print("New user ID: %r" % new_user_id)
+        current_app.logger.info("New user ID: %r", new_user_id)
+
+        user = self.get_by_field(name='id', value=new_user_id)
+        return user
+    # ____________________________
+
     def save_user(self, email, username, password, role='user'):
 
         # Set user role

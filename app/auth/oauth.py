@@ -1,6 +1,12 @@
 from rauth import OAuth1Service
 from flask import url_for
-from flask import current_app
+from flask import (
+    current_app,
+    session,
+    request,
+    redirect
+)
+# ==================================
 
 
 class OAuthSignIn(object):
@@ -19,7 +25,7 @@ class OAuthSignIn(object):
         pass
 
     def get_callback_url(self):
-        return url_for('oauth_callback', provider=self.provider_name,
+        return url_for('auth.oauth_callback', provider=self.provider_name,
                        _external=True)
 
     @classmethod
@@ -30,10 +36,7 @@ class OAuthSignIn(object):
                 provider = provider_class()
                 self.providers[provider.provider_name] = provider
         return self.providers[provider_name]
-
-
-class FacebookSignIn(OAuthSignIn):
-    pass
+# ==================================
 
 
 class TwitterSignIn(OAuthSignIn):
@@ -48,7 +51,29 @@ class TwitterSignIn(OAuthSignIn):
             access_token_url='https://api.twitter.com/oauth/access_token',
             base_url='https://api.twitter.com/1.1/'
         )
+    # __________________________________
 
+    def authorize(self):
+        request_token = self.service.get_request_token(
+            params={'oauth_callback': self.get_callback_url()}
+        )
 
-class GoogleSignIn(OAuthSignIn):
-    pass
+        session['request_token'] = request_token
+        return redirect(self.service.get_authorize_url(request_token[0]))
+    # ______________________________
+
+    def callback(self):
+        request_token = session.pop('request_token')
+        if 'oauth_verifier' not in request.args:
+            return None, None, None
+        oauth_session = self.service.get_auth_session(
+            request_token[0],
+            request_token[1],
+            data={'oauth_verifier': request.args['oauth_verifier']}
+        )
+        me = oauth_session.get('account/verify_credentials.json').json()
+        social_id = 'twitter$' + str(me.get('id'))
+        username = me.get('screen_name')
+        return social_id, username, None   # Twitter does not provide email
+    # ______________________________
+# ==================================
