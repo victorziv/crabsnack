@@ -114,7 +114,7 @@ class QueryUser(object):
             return
     # ____________________________
 
-    def create_oauth(self, email, nickname, social_id, role_id):
+    def create_oauth(self, email, username, social_id, role_id):
         """
         id = SERIAL primary_key=True)
         email = String(64), unique=True, index=True
@@ -124,12 +124,12 @@ class QueryUser(object):
         """
 
         query = """
-            INSERT INTO users (email, nickname, social_id, role_id)
+            INSERT INTO users (email, username, social_id, role_id)
             VALUES (%s, %s, %s, %s)
             RETURNING id
         """
 
-        params = (email, nickname, social_id, role_id)
+        params = (email, username, social_id, role_id)
 
         try:
             self.db.cur.execute(query, params)

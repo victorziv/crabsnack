@@ -289,7 +289,7 @@ class User(UserMixin, BaseModel):
 
     # __________________________________
 
-    def save_user_oauth(self, email, nickname, social_id, role='user'):
+    def save_user_oauth(self, email, username, social_id, role='user'):
 
         # Set user role
         if role.lower() == 'admin':
@@ -300,7 +300,7 @@ class User(UserMixin, BaseModel):
 
         new_user_id = self.query.create_oauth(
             email=email,
-            nickname=nickname,
+            username=username,
             social_id=social_id,
             role_id=role.id
         )

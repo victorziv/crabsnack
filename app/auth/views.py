@@ -33,7 +33,7 @@ def oauth_callback(provider):
 
     user = User().get_by_field(name='social_id', value=social_id)
     if not user:
-        user = User().save_user_oauth(social_id=social_id, nickname=username, email=email)
+        user = User().save_user_oauth(social_id=social_id, username=username, email=email)
 
     login_user(user, True)
     return redirect(url_for('main.index'))
