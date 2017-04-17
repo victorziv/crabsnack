@@ -1,9 +1,7 @@
 import os
 import glob
-# import datetime
 import psycopg2
 from psycopg2.extras import DictCursor
-# from psycopg2 import DatabaseError, IntegrityError
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, AsIs
 from flask import current_app
 # ========================================
@@ -161,9 +159,7 @@ class DBAdmin(object):
         query = """
             CREATE TABLE IF NOT EXISTS changelog (
                 id serial PRIMARY KEY,
-                major VARCHAR(2),
-                minor VARCHAR(2),
-                patch VARCHAR(4),
+                version VARCHAR(4),
                 name VARCHAR(100) UNIQUE,
                 applied TIMESTAMP
             );
