@@ -112,11 +112,15 @@ class DBAdmin(object):
         versions = self.get_upgrade_versions(upto_version)
 
         self.apply_versions(versions)
-        self.insert_changelog_record(migration_file)
     # _____________________________
 
     def apply_versions(self, versions):
         for ver in versions:
+            if self.already_applied(ver['version']):
+                continue
+
+            recordid = self.insert_changelog_record(ver['version'], ver['name'])
+            self.logger.info("Changelog record ID for version {}: {}".format(recordid, ver))
     # _____________________________
 
     def create_changelog_table(self):
@@ -294,8 +298,6 @@ class DBAdmin(object):
 
     def insert_changelog_record(self, version_number, name):
 
-        """
-        """
         try:
 
             query = """
