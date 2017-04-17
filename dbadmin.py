@@ -1,4 +1,5 @@
 import os
+import datetime
 import glob
 import psycopg2
 from psycopg2.extras import DictCursor
@@ -108,8 +109,14 @@ class DBAdmin(object):
 
     def db_upgrade(self, upto_version):
         print("Up to version: {}".format(upto_version))
-        self.get_upgrade_versions(upto_version)
-#         db.insert_changelog_record(migration_file)
+        versions = self.get_upgrade_versions(upto_version)
+
+        self.apply_versions(versions)
+        self.insert_changelog_record(migration_file)
+    # _____________________________
+
+    def apply_versions(self, versions):
+        for ver in versions:
     # _____________________________
 
     def create_changelog_table(self):
@@ -285,39 +292,30 @@ class DBAdmin(object):
             f.close()
     # _____________________________
 
+    def insert_changelog_record(self, version_number, name):
 
-#     db.insert_changelog_record(migration_file)
-#    def insert_changelog_record(self, filename):
+        """
+        """
+        try:
 
-#        """
-#        """
-#        try:
+            query = """
+                INSERT INTO changelog
+                (version, name, applied)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """
+            params = (version_number, name, datetime.datetime.now())
 
-#            print("XXXX File: %s" % filename)
-#            patch_name = os.path.splitext(filename)[0]
-#            print("Patch name: %s " % patch_name)
-#            patchver, name = patch_name.split('.')
-#            print("Patchver, name: %s %s " % (patchver, name))
+            self.cur.execute(query, params)
+            self.conn.commit()
+            fetch = self.cur.fetchone()
+            return fetch['id']
 
-#            query = """
-#                INSERT INTO changelog
-#                    (major, minor, patch, name, applied)
-#                VALUES (%s, %s, %s, %s, %s)
-#                RETURNING id
-#            """
-
-#            params = ('01', '00', patchver, name, datetime.datetime.now())
-
-#            self.cur.execute(query, params)
-#            self.conn.commit()
-#            fetch = self.cur.fetchone()
-#            return fetch['id']
-
-#        except Exception as e:
-#            print('ERROR: %s' % e)
-#            self.conn.rollback()
-#            return
-#    # ____________________________
+        except Exception as e:
+            print('ERROR: %s' % e)
+            self.conn.rollback()
+            return
+# ____________________________
 
 
 # class Baseline(object):
