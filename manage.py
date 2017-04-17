@@ -133,7 +133,7 @@ def dbmigrate(configkey, action, version=None):
     dba = DBAdmin(conf=conf)
 
     try:
-        dba.conn = dba.connectdb(dba.conf.DB_CONN_URI)
+        dba.conn, dba.cur = dba.connectdb(dba.conf.DB_CONN_URI)
         if action == 'upgrade':
             dba.db_upgrade(version)
         elif action == 'downgrade':

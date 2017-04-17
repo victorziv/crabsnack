@@ -78,7 +78,10 @@ class DBAdmin(object):
         try:
             conn = psycopg2.connect(dburi)
             print("Connected: {}".format(conn))
-            return conn
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            print("Connected: {} {}".format(conn, cursor))
+            return conn, cursor
+
         except psycopg2.OperationalError as e:
             print("ERROR!: {}".format(e))
             if 'does not exist' in str(e):
@@ -87,32 +90,23 @@ class DBAdmin(object):
                 raise
     # ___________________________
 
-    def get_upgrade_versions(self, upto_version):
-        # --------------------------
-        def _compose_version(vfile):
-            module = os.path.splitext(os.path.basename(vfile))[0]
-            version, name = module.split('_', 1)
-            return dict(name=name, module=module, version=version)
-        # --------------------------
+    def already_applied(self, version):
 
-        versions_path = os.path.join(self.conf.BASEDIR, 'migrations/versions')
-        vfiles = glob.iglob(os.path.join(versions_path, '[0-9]*.py'))
-        print("Versions files: {}".format(vfiles))
-        versions = sorted(
-            [_compose_version(vfile) for vfile in vfiles],
-            key=lambda x: int(x['version'])
-        )
-        print("Versions: {}".format(versions))
-        return versions
+        print("Already applied check version: {}".format(version))
+        query = """
+            SELECT EXISTS(
+                SELECT 1 FROM changelog WHERE version = %s
+            )
+
+        """
+        params = (version,)
+
+        self.cur.execute(query, params)
+        fetch = self.cur.fetchone()
+        print("Exists fetch: {}".format(fetch))
+        return fetch[0]
 
     # ___________________________
-
-    def db_upgrade(self, upto_version):
-        print("Up to version: {}".format(upto_version))
-        versions = self.get_upgrade_versions(upto_version)
-
-        self.apply_versions(versions)
-    # _____________________________
 
     def apply_versions(self, versions):
         for ver in versions:
@@ -120,7 +114,14 @@ class DBAdmin(object):
                 continue
 
             recordid = self.insert_changelog_record(ver['version'], ver['name'])
-            self.logger.info("Changelog record ID for version {}: {}".format(recordid, ver))
+            print("Changelog record ID for version {}: {}".format(recordid, ver))
+    # _____________________________
+
+    def db_upgrade(self, upto_version):
+        print("Up to version: {}".format(upto_version))
+        versions = self.get_upgrade_versions(upto_version)
+
+        self.apply_versions(versions)
     # _____________________________
 
     def create_changelog_table(self):
@@ -276,9 +277,10 @@ class DBAdmin(object):
     # _____________________________
 
     def init_app(self, app):
-        self.conn = DBAdmin.connectdb(app.config['DB_CONN_URI'])
+        self.conn, self.cur = DBAdmin.connectdb(app.config['DB_CONN_URI'])
         app.db = self
-        app.db.cur = self.conn.cursor(cursor_factory=DictCursor)
+        app.db.conn = self.conn
+        app.db.cur = self.cur
         return app
     # _____________________________
 
@@ -303,7 +305,7 @@ class DBAdmin(object):
             query = """
                 INSERT INTO changelog
                 (version, name, applied)
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s)
                 RETURNING id
             """
             params = (version_number, name, datetime.datetime.now())
@@ -317,7 +319,27 @@ class DBAdmin(object):
             print('ERROR: %s' % e)
             self.conn.rollback()
             return
-# ____________________________
+    # ____________________________
+
+    def get_upgrade_versions(self, upto_version):
+        # --------------------------
+        def _compose_version(vfile):
+            module = os.path.splitext(os.path.basename(vfile))[0]
+            version, name = module.split('_', 1)
+            return dict(name=name, module=module, version=version)
+        # --------------------------
+
+        versions_path = os.path.join(self.conf.BASEDIR, 'migrations/versions')
+        vfiles = glob.iglob(os.path.join(versions_path, '[0-9]*.py'))
+        print("Versions files: {}".format(vfiles))
+        versions = sorted(
+            [_compose_version(vfile) for vfile in vfiles],
+            key=lambda x: int(x['version'])
+        )
+        print("Versions: {}".format(versions))
+        return versions
+
+    # ___________________________
 
 
 # class Baseline(object):
