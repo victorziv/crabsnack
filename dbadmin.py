@@ -1,6 +1,7 @@
 import os
 import datetime
 import glob
+import importlib
 import psycopg2
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, AsIs
@@ -90,16 +91,16 @@ class DBAdmin(object):
                 raise
     # ___________________________
 
-    def already_applied(self, version):
+    def already_applied(self, name):
 
-        print("Already applied check version: {}".format(version))
+        print("Already applied check name: {}".format(name))
         query = """
             SELECT EXISTS(
-                SELECT 1 FROM changelog WHERE version = %s
+                SELECT 1 FROM changelog WHERE name = %s
             )
 
         """
-        params = (version,)
+        params = (name,)
 
         self.cur.execute(query, params)
         fetch = self.cur.fetchone()
@@ -110,11 +111,23 @@ class DBAdmin(object):
 
     def apply_versions(self, versions):
         for ver in versions:
-            if self.already_applied(ver['version']):
+            if self.already_applied(ver['name']):
                 continue
 
-            recordid = self.insert_changelog_record(ver['version'], ver['name'])
-            print("Changelog record ID for version {}: {}".format(recordid, ver))
+            try:
+
+                version = ver['version']
+                name = ver['name']
+                module_name = ver['module']
+                mod = importlib.import_module('migrations.versions.%s' % module_name)
+                mod.upgrade(self.conn, version, name)
+
+                recordid = self.insert_changelog_record(ver['version'], ver['name'])
+                print("Changelog record ID for version {}: {}".format(recordid, ver))
+            except Exception as e:
+                print('ERROR: {}'.format(e))
+                self.conn.rollback()
+
     # _____________________________
 
     def db_upgrade(self, upto_version):
@@ -265,7 +278,6 @@ class DBAdmin(object):
     def create_baseline(self, conn):
         version = '0000'
         name = 'baseline'
-        import importlib
         module_name = 'migrations.versions.{}_{}'.format(version, name)
         mod = importlib.import_module(module_name)
         mod.upgrade(conn, version, name)
