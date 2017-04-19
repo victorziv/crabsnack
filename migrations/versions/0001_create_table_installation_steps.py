@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 
-def upgrade(conn, version, name):
+def upgrade(conn, **kwargs):
     try:
         query = """
-            CREATE TABLE IF NOT EXISTS roles (
+            CREATE TABLE IF NOT EXISTS installationstep (
                 id serial PRIMARY KEY,
-                name VARCHAR(64) UNIQUE,
-                isdefault BOOLEAN DEFAULT FALSE,
-                permissions INTEGER
+                name VARCHAR(32) UNIQUE,
+                display_name VARCHAR(64),
+                priority INTEGER
             );
         """
         params = ()
@@ -23,10 +23,10 @@ def upgrade(conn, version, name):
 # _______________________________
 
 
-def downgrade(conn):
+def downgrade(conn, **kwargs):
     try:
         query = """
-            DROP TABLE IF EXISTS roles
+            DROP TABLE IF EXISTS installationstep
         """
         params = ()
         cursor = conn.cursor()

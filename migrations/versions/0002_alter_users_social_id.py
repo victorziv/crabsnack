@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 
 
-def upgrade(conn, version, name):
+def upgrade(conn, **kwargs):
     try:
         query = """
-            CREATE TABLE IF NOT EXISTS installationstep (
-                id serial PRIMARY KEY,
-                name VARCHAR(32) UNIQUE,
-                display_name VARCHAR(64),
-                priority INTEGER
-            );
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS social_id VARCHAR(64) UNIQUE;
         """
         params = ()
         cursor = conn.cursor()
@@ -23,10 +19,10 @@ def upgrade(conn, version, name):
 # _______________________________
 
 
-def downgrade(conn):
+def downgrade(conn, **kwargs):
     try:
         query = """
-            DROP TABLE IF EXISTS installationstep
+            ALTER TABLE users DROP COLUMN IF EXISTS social_id;
         """
         params = ()
         cursor = conn.cursor()

@@ -93,7 +93,10 @@ class DBAdmin(object):
 
     def already_applied(self, name):
 
-        print("Already applied check name: {}".format(name))
+        if name == 'baseline':
+            return False
+
+        print("Check if already applied check name: {}".format(name))
         query = """
             SELECT EXISTS(
                 SELECT 1 FROM changelog WHERE name = %s
@@ -116,13 +119,13 @@ class DBAdmin(object):
 
             try:
 
-                version = ver['version']
-                name = ver['name']
                 module_name = ver['module']
                 mod = importlib.import_module('migrations.versions.%s' % module_name)
-                mod.upgrade(self.conn, version, name)
+                mod.upgrade(self.conn)
 
-                recordid = self.insert_changelog_record(ver['version'], ver['name'])
+                version = ver['version']
+                name = ver['name']
+                recordid = self.insert_changelog_record(version, name)
                 print("Changelog record ID for version {}: {}".format(recordid, ver))
             except Exception as e:
                 print('ERROR: {}'.format(e))
@@ -137,62 +140,62 @@ class DBAdmin(object):
         self.apply_versions(versions)
     # _____________________________
 
-    def create_changelog_table(self):
-        """
-        """
+#    def create_changelog_table(self):
+#        """
+#        """
 
-        query = """
-            CREATE TABLE IF NOT EXISTS changelog (
-                id serial PRIMARY KEY,
-                name VARCHAR(64) UNIQUE,
-                filenumber VARCHAR(4),
-                dateapplied TIMESTAMP,
-                comment VARCHAR(255)
-            );
-        """
-        params = {}
+#        query = """
+#            CREATE TABLE IF NOT EXISTS changelog (
+#                id serial PRIMARY KEY,
+#                name VARCHAR(64) UNIQUE,
+#                filenumber VARCHAR(4),
+#                dateapplied TIMESTAMP,
+#                comment VARCHAR(255)
+#            );
+#        """
+#        params = {}
 
-        self.cur.execute(query, params)
-        self.conn.commit()
+#        self.cur.execute(query, params)
+#        self.conn.commit()
     # _____________________________
 
-    def create_table_roles(self):
-        """
-        class models.Role
-        id = db.Column(db.Integer, primary_key=True)
-        name = db.Column(db.String(64), unique=True)
-        default = db.Column(db.Boolean, default=False, index=True)
-        permissions = db.Column(db.Integer)
-        """
+#    def create_table_roles(self):
+#        """
+#        class models.Role
+#        id = db.Column(db.Integer, primary_key=True)
+#        name = db.Column(db.String(64), unique=True)
+#        default = db.Column(db.Boolean, default=False, index=True)
+#        permissions = db.Column(db.Integer)
+#        """
 
-        query = """
-            CREATE TABLE IF NOT EXISTS roles (
-                id serial PRIMARY KEY,
-                name VARCHAR(64) UNIQUE,
-                isdefault BOOLEAN DEFAULT FALSE,
-                permissions INTEGER
-            );
-        """
-        params = {}
+#        query = """
+#            CREATE TABLE IF NOT EXISTS roles (
+#                id serial PRIMARY KEY,
+#                name VARCHAR(64) UNIQUE,
+#                isdefault BOOLEAN DEFAULT FALSE,
+#                permissions INTEGER
+#            );
+#        """
+#        params = {}
 
-        self.cur.execute(query, params)
-        self.conn.commit()
+#        self.cur.execute(query, params)
+#        self.conn.commit()
     # _____________________________
 
-    def create_table_changelog(self):
+#    def create_table_changelog(self):
 
-        query = """
-            CREATE TABLE IF NOT EXISTS changelog (
-                id serial PRIMARY KEY,
-                version VARCHAR(4),
-                name VARCHAR(100) UNIQUE,
-                applied TIMESTAMP
-            );
-        """
-        params = {}
+#        query = """
+#            CREATE TABLE IF NOT EXISTS changelog (
+#                id serial PRIMARY KEY,
+#                version VARCHAR(4),
+#                name VARCHAR(100) UNIQUE,
+#                applied TIMESTAMP
+#            );
+#        """
+#        params = {}
 
-        self.cur.execute(query, params)
-        self.conn.commit()
+#        self.cur.execute(query, params)
+#        self.conn.commit()
     # _____________________________
 
     def create_table_installationstep(self):
