@@ -1,3 +1,4 @@
+import json
 import requests
 from rauth import OAuth1Service, OAuth2Service
 from flask import url_for
@@ -83,14 +84,14 @@ class TwitterSignIn(OAuthSignIn):
 class GoogleSignIn(OAuthSignIn):
     def __init__(self):
         super(GoogleSignIn, self).__init__('google')
-        params = requests.get('https://accounts.google.com/.well-known/openid-configuration').json()
+        google_params = requests.get('https://accounts.google.com/.well-known/openid-configuration').json()
         self.service = OAuth2Service(
             name='google',
             client_id=self.consumer_id,
             client_secret=self.consumer_secret,
-            authorize_url=params.get('authorization_point'),
-            base_url=params.get('userinfo_endpoint'),
-            access_token_url=params.get('token_endpoint')
+            authorize_url=google_params.get('authorization_endpoint'),
+            base_url=google_params.get('userinfo_endpoint'),
+            access_token_url=google_params.get('token_endpoint')
         )
     # _____________________________________
 
@@ -107,3 +108,17 @@ class GoogleSignIn(OAuthSignIn):
     def callback(self):
         if 'code' not in request.args:
             return None, None, None
+
+        oauth_session = self.service.get_auth_session(
+            data={
+                'code': request.args['code'],
+                'grant_type': 'authorization_code',
+                'redirect_uri': self.get_callback_url()
+            },
+            decoder=json.loads
+        )
+
+        me = oauth_session.get('').json()
+        print("Google ME: {}".format(me))
+        social_id = 'google$' + str(me.get('id'))
+        return social_id, me['name'], me['email']
