@@ -1,4 +1,5 @@
-from rauth import OAuth1Service
+import requests
+from rauth import OAuth1Service, OAuth2Service
 from flask import url_for
 from flask import (
     current_app,
@@ -77,3 +78,32 @@ class TwitterSignIn(OAuthSignIn):
         return social_id, username, None   # Twitter does not provide email
     # ______________________________
 # ==================================
+
+
+class GoogleSignIn(OAuthSignIn):
+    def __init__(self):
+        super(GoogleSignIn, self).__init__('google')
+        params = requests.get('https://accounts.google.com/.well-known/openid-configuration').json()
+        self.service = OAuth2Service(
+            name='google',
+            client_id=self.consumer_id,
+            client_secret=self.consumer_secret,
+            authorize_url=params.get('authorization_point'),
+            base_url=params.get('userinfo_endpoint'),
+            access_token_url=params.get('token_endpoint')
+        )
+    # _____________________________________
+
+    def authorize(self):
+        return redirect(
+            self.service.get_authorize_url(
+                scope='email',
+                response_type='code',
+                redirect_uri=self.get_callback_url()
+            )
+        )
+    # ______________________________________
+
+    def callback(self):
+        if 'code' not in request.args:
+            return None, None, None
