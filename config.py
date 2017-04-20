@@ -67,7 +67,10 @@ class Config:
             "id": "zwY4WSnGxv9nLz0RZnBsMpQPH",
             "secret": "wiekiIXApl03P47xGSLFezJb6rzTvQdEL4mQJ3Fim7fNJNN344"
         },
-        "google": {}
+        "google": {
+            "id": "62704831834-5pi1aknsh0jgnnbmg27c4jb3ieg07apc.apps.googleusercontent.com",
+            "secret": "6BUoiQ23bIZgbMNGy9r9WqXk",
+        }
     }
 
     # ___________________________________________
