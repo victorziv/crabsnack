@@ -5,7 +5,7 @@ import logging
 
 class Config:
     BASEDIR = os.path.abspath(os.path.dirname(__file__))
-    PROJECT = 'crabsnack'
+    PROJECT = 'krabs'
     PROJECT_USER = 'krabs'
     APP = 'crabtest'
     SECRET_KEY = os.environ.get('SECRET_KEY') \
@@ -24,7 +24,7 @@ class Config:
     TEST_OWNER_DEFAULT = '%s@nowhere.com' % PROJECT_USER
 
     DBHOST = 'localhost'
-    DBPORT = 5442
+    DBPORT = 5432
     DBUSER = PROJECT_USER
     DBPASSWORD = PROJECT_USER
 
@@ -68,8 +68,8 @@ class Config:
             "secret": "wiekiIXApl03P47xGSLFezJb6rzTvQdEL4mQJ3Fim7fNJNN344"
         },
         "google": {
-            "id": "62704831834-5pi1aknsh0jgnnbmg27c4jb3ieg07apc.apps.googleusercontent.com",
-            "secret": "6BUoiQ23bIZgbMNGy9r9WqXk",
+            "id": "261888576370-pn751o1qrqbcu662nmr3a24nr9cf3eku.apps.googleusercontent.com",
+            "secret": "TDwCUl-WzhOjGw6x_P5bYxtH"
         }
     }
 
