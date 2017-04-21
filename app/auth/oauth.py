@@ -109,20 +109,23 @@ class GoogleSignIn(OAuthSignIn):
         if 'code' not in request.args:
             return None, None, None
 
-        code = request.args['code'],
+        code = request.args['code']
         print("Code: {}".format(code))
         print("Code type: {}".format(type(code)))
         redirect_uri = self.get_callback_url()
         print("Redirect URI: {}".format(redirect_uri))
         print("Redirect URI type: {}".format(type(redirect_uri)))
 
-        oauth_session = self.service.get_auth_session(
-            data={
-                'code': code,
-                'grant_type': 'authorization_code',
-                'redirect_uri': self.get_callback_url()
-            },
+        data = {
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': self.get_callback_url()
+        }
 
+        print("Data: {}".format(data))
+
+        oauth_session = self.service.get_auth_session(
+            data=data,
             decoder=lambda b: json.loads(b.decode('utf-8'))
         )
 
