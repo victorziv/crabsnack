@@ -128,5 +128,5 @@ class GoogleSignIn(OAuthSignIn):
 
         me = oauth_session.get('').json()
         print("Google ME: {}".format(me))
-        social_id = 'google$' + str(me.get('id'))
-        return social_id, me['name'], me['email']
+        social_id = 'google$' + str(me.get('sub'))
+        return social_id, me['email'], me['email']
