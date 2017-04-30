@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <title>Mr. Krabs&trade; BB Dashboard</title>
+
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', r=82845) }}" type="image/x-icon">
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico', r=82845) }}" type="image/x-icon">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/ui.jqgrid-4.14.0.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/sticky-footer-navbar.css') }}">
+
+        {% block head %}{% endblock %}
+
+    </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Crabsnack Dashboard</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+
+                <li id="nav-home">
+                    <a href="{{ url_for('main.index') }}">
+                        <span class="glyphicon glyphicon-tower"></span> Home
+                    </a>
+                </li>
+
+                <li id="nav-test-dashboard">
+                    <a href="{{ url_for('static', filename='doc/index.html') }}">
+                        <span class="glyphicon glyphicon-education"></span> Dashboard Documentation
+                    </a>
+                </li>
+                
+                <li id="nav-testdoc">
+                    <a href="#">
+                        <span class="glyphicon glyphicon-education"></span> Tests Documentation
+                    </a>
+                </li>
+
+                <li id="nav-ibox-install">
+                    <a href="{{ url_for('ibox_install.ibox_install_steps') }}">
+                        <span class="glyphicon glyphicon-wrench"></span> IBox Installation
+                    </a>
+                </li>
+
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('auth.logout') }}">Sign Out</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+                {% endif %}
+            </ul>
+
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    {% block content %}
+    <div class="container">
+        {% for msg in get_flashed_messages() %}
+            <div class="alert alert-warning">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ msg }}
+            </div>
+        {% endfor %}
+
+        {% block page_content %}{% endblock %}
+    </div>
+    {% endblock %}
+
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted credit">&copy; Don't panic</p>
+      </div>
+    </footer>
+    
+    <script language="javascript" src="{{ url_for('static', filename='js/jquery-1.12.4.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/free-jqgrid/4.13.6/js/jquery.jqgrid.min.js"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/jquery.jqgrid-4.14.0.min.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    {% block external_script %}{% endblock %} 
+
+    <script>
+
+        jQuery(document).ready(function () {
+            {% block docready %}{% endblock %} 
+        });
+
+    </script>
+
+  </body>
+</html>

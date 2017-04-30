@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <title>Infinidat&trade; IVTS Dashboard</title>
+
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', r=82845) }}" type="image/x-icon">
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico', r=82845) }}" type="image/x-icon">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/free-jqgrid/4.13.6/css/ui.jqgrid.min.css">
+
+        {% block head %}{% endblock %}
+
+    </head>
+
+    <body>
+        <div id="wrap">
+            <div class="page-container">
+
+                {% include "menu.html" %}
+
+                <div class="container-fluid page-content">
+
+                    {% block top_submenu_container %}
+
+                        {% block main_content %}
+                        {% endblock %}
+
+                    {% endblock %}
+                    
+                </div><!-- /.container-fluid -->
+            </div><!-- /.page-container -->
+        </div><!-- /#wrap -->
+
+        <div id="footer">
+            <div class="container-fluid">
+                <p class="text-muted credit">&copy; Don't panic</p>
+            </div>
+        </div>
+
+
+        <script language="javascript" src="{{ url_for('static', filename='js/jquery-1.12.4.min.js') }}"></script>
+        <script src="https://cdn.jsdelivr.net/free-jqgrid/4.13.6/js/jquery.jqgrid.min.js"></script>
+        <script language="javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+        {% block external_script %} 
+        {% endblock %} 
+
+        <script>
+
+            jQuery(document).ready(function () {
+                //jQuery.jgrid.defaults.styleUI = 'Bootstrap';
+                //jQuery.jgrid.styleUI.Bootstrap.base.headerTable = "table table-bordered table-condensed";
+                //jQuery.jgrid.styleUI.Bootstrap.base.rowTable = "table table-bordered table-condensed";
+                //jQuery.jgrid.styleUI.Bootstrap.base.footerTable = "table table-bordered table-condensed";
+                //jQuery.jgrid.styleUI.Bootstrap.base.pagerTable = "table table-condensed";
+                //jQuery.jgrid.loadui = 'block';
+                //jQuery.extend(jQuery.jgrid.del, {
+                 //   mtype: "DELETE",
+                //});
+
+
+                //jQuery.blockUI.defaults.theme = true;
+
+                {% block docready %} 
+                {% endblock %} 
+            });
+        </script>
+
+        {##% include "progress_bar.html" %##}
+
+    </body>
+</html>

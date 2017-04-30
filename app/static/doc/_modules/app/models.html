@@ -1,0 +1,506 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>app.models &#8212; IVT Dashboard 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for app.models</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">itsdangerous</span> <span class="k">import</span> <span class="n">TimedJSONWebSignatureSerializer</span> <span class="k">as</span> <span class="n">Serializer</span>
+<span class="kn">from</span> <span class="nn">werkzeug.security</span> <span class="k">import</span> <span class="n">generate_password_hash</span><span class="p">,</span> <span class="n">check_password_hash</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">abort</span>
+<span class="kn">from</span> <span class="nn">flask_login</span> <span class="k">import</span> <span class="n">UserMixin</span><span class="p">,</span> <span class="n">AnonymousUserMixin</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">login_manager</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">current_app</span>
+<span class="kn">from</span> <span class="nn">app</span> <span class="k">import</span> <span class="n">db</span>
+<span class="kn">from</span> <span class="nn">app.dbmodels.query_role</span> <span class="k">import</span> <span class="n">QueryRole</span>
+<span class="kn">from</span> <span class="nn">app.dbmodels.query_user</span> <span class="k">import</span> <span class="n">QueryUser</span>
+<span class="kn">from</span> <span class="nn">app.dbmodels.query_installation</span> <span class="k">import</span> <span class="n">QueryInstallation</span>
+<span class="c1"># ===========================</span>
+
+
+<span class="n">Role</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s1">&#39;Role&#39;</span><span class="p">,</span>
+    <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;default&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="c1"># ===========================</span>
+
+
+<span class="k">class</span> <span class="nc">Permission</span><span class="p">:</span>
+    <span class="n">VIEW_REPORT</span> <span class="o">=</span> <span class="mh">0x01</span>          <span class="c1"># 0b00000001</span>
+    <span class="n">RUN_CASE</span> <span class="o">=</span> <span class="mh">0x02</span>             <span class="c1"># 0b00000010</span>
+    <span class="n">WRITE_COMMENTS</span> <span class="o">=</span> <span class="mh">0x04</span>       <span class="c1"># 0b00000100</span>
+    <span class="n">ADMINISTER_EXTERNAL</span> <span class="o">=</span> <span class="mh">0x08</span>  <span class="c1"># 0b00001000</span>
+    <span class="n">ADMINISTER</span> <span class="o">=</span> <span class="mh">0x80</span>           <span class="c1"># 0b10000000</span>
+
+<span class="c1"># ===========================</span>
+
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">get_by_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span>
+        <span class="n">modeld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">read_one_by_field</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">modeld</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">modeld</span><span class="p">)</span>
+    <span class="c1"># ___________________________</span>
+
+    <span class="k">def</span> <span class="nf">clear_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">remove_all_records</span><span class="p">()</span>
+<span class="c1"># ===========================</span>
+
+
+<span class="k">class</span> <span class="nc">RoleModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Columns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    id = db.Column(db.Integer, primary_key=True)</span>
+<span class="sd">    name = db.Column(db.String(64), unique=True)</span>
+<span class="sd">    default = db.Column(db.Boolean, default=False, index=True)</span>
+
+<span class="sd">    # ____________________________</span>
+
+<span class="sd">    Roles permissions</span>
+<span class="sd">    -----------------</span>
+<span class="sd">    Anonymous       0b00000000 (0x00) # not-logged in - nothing allowed</span>
+<span class="sd">    ExternalUser    0b00000001 (0x01) # View reports only</span>
+<span class="sd">    User            0b00000111 (0x07) # View reports, run cases, write comments</span>
+<span class="sd">    ExternalAdmin   0b00001111 (0xf0) # Administer external users</span>
+<span class="sd">    Admin           0b11111111 (0xFF) # Administer all</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;roles&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;Role </span><span class="si">%r</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">QueryRole</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">insert_roles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">roles</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;external_user&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">Permission</span><span class="o">.</span><span class="n">VIEW_REPORT</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+
+            <span class="s1">&#39;user&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">Permission</span><span class="o">.</span><span class="n">VIEW_REPORT</span> <span class="o">|</span>
+                     <span class="n">Permission</span><span class="o">.</span><span class="n">RUN_CASE</span> <span class="o">|</span>
+                     <span class="n">Permission</span><span class="o">.</span><span class="n">WRITE_COMMENTS</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+
+            <span class="s1">&#39;external_admin&#39;</span><span class="p">:</span> <span class="p">(</span>
+                 <span class="n">Permission</span><span class="o">.</span><span class="n">VIEW_REPORT</span> <span class="o">|</span>  <span class="c1"># noqa</span>
+                 <span class="n">Permission</span><span class="o">.</span><span class="n">RUN_CASE</span> <span class="o">|</span>
+                 <span class="n">Permission</span><span class="o">.</span><span class="n">WRITE_COMMENTS</span> <span class="o">|</span>
+                 <span class="n">Permission</span><span class="o">.</span><span class="n">ADMINISTER_EXTERNAL</span><span class="p">,</span> <span class="kc">False</span>
+            <span class="p">),</span>
+
+            <span class="s1">&#39;admin&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mh">0xff</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">roles</span><span class="p">:</span>
+            <span class="n">role</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">read_one_by_field</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Role found: </span><span class="si">%r</span><span class="s2"> &quot;</span><span class="p">,</span> <span class="n">role</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">role</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+                    <span class="n">permissions</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">default</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">role</span><span class="p">)</span>
+
+<span class="c1"># ===========================</span>
+
+
+<span class="n">Installation</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s1">&#39;Installation&#39;</span><span class="p">,</span>
+    <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="s1">&#39;step_name&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">InstallationModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    id = db.Column(db.Integer, primary_key=True)</span>
+<span class="sd">    name = db.Column(db.String(64), unique=True)</span>
+<span class="sd">    display_name = db.Column(db.String(64), unique=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;InstallationStep </span><span class="si">%r</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">QueryInstallation</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">insert_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;hw_config&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;HW Config&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;installation&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Installation&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;post_script&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Post Installation Script&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;hw_wizard&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;HW Wizard&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;check_all&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Check All&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;direct_io&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Direct IO&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;fc_loopback&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;FC Loopback Test&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">step</span><span class="o">=</span><span class="s1">&#39;internal_network&#39;</span><span class="p">,</span>
+                <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Internal Network Test&#39;</span>
+            <span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;disable_fc_port&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Disable FC Port&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;mfg_suite&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;MFG Test Suite&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;enable_fc_port&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Enable FC Port&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;check_all&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Check All Test&#39;</span><span class="p">),</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s1">&#39;cleanup&#39;</span><span class="p">,</span> <span class="n">step_name</span><span class="o">=</span><span class="s1">&#39;Clean Up&#39;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+            <span class="n">step</span><span class="p">[</span><span class="s1">&#39;priority&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">get_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="c1"># read() returns a list of DictRow objects</span>
+        <span class="c1"># Casting to a list of dicts</span>
+        <span class="n">steps_to_return</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">]</span>
+        <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Installation steps: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">steps_to_return</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">steps_to_return</span>
+
+<span class="c1"># ===========================</span>
+
+
+<span class="n">User</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s1">&#39;User&#39;</span><span class="p">,</span>
+    <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="s1">&#39;password_hash&#39;</span><span class="p">,</span> <span class="s1">&#39;role&#39;</span><span class="p">,</span> <span class="s1">&#39;permissions&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="c1"># ____________________________________</span>
+
+<span class="n">AnonymousUser</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s1">&#39;AnonymousUser&#39;</span><span class="p">,</span>
+    <span class="p">[]</span>
+<span class="p">)</span>
+<span class="c1"># ____________________________________</span>
+
+
+<div class="viewcode-block" id="AnonymousUserModel"><a class="viewcode-back" href="../../api.html#app.models.AnonymousUserModel">[docs]</a><span class="k">class</span> <span class="nc">AnonymousUserModel</span><span class="p">(</span><span class="n">AnonymousUserMixin</span><span class="p">):</span>
+
+    <span class="c1"># ____________________________</span>
+
+<div class="viewcode-block" id="AnonymousUserModel.can"><a class="viewcode-back" href="../../api.html#app.models.AnonymousUserModel.can">[docs]</a>    <span class="k">def</span> <span class="nf">can</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permissions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fake permissions check for an anonymous user.</span>
+
+<span class="sd">        An anonymous user is not going to have permissions to do anything in our environment.</span>
+
+<span class="sd">        :Steps:</span>
+<span class="sd">            #. We are generally repelled by the folks that don&#39;t care to introduce themselves properly.</span>
+<span class="sd">            #. It&#39;s even worse when they do it on the phone.</span>
+
+<span class="sd">        :Args:</span>
+<span class="sd">            permissions (int): Permissions mask as an integer number.</span>
+
+<span class="sd">        :Returns:</span>
+<span class="sd">            bool: Always return False no matter how hard you&#39;ve been asked to approve.</span>
+
+<span class="sd">        :Attributes:</span>
+<span class="sd">            ticket: |ticket_link|</span>
+<span class="sd">                .. |ticket_link| raw:: html</span>
+
+<span class="sd">                   &lt;a href=&quot;https://jira.infinidat.com/browse/IVTS-415&quot; target=&quot;_blank&quot;&gt;IVTS-415&lt;/a&gt;</span>
+
+<span class="sd">            testplan: |testplan_link|</span>
+<span class="sd">                .. |testplan_link| raw:: html</span>
+
+<span class="sd">                   &lt;a href=&quot;https://jira.infinidat.com/browse/IVTS-414&quot; target=&quot;_blank&quot;&gt;IVTS-414&lt;/a&gt;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">is_admin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<span class="c1"># ===========================</span>
+
+
+<div class="viewcode-block" id="UserModel"><a class="viewcode-back" href="../../api.html#app.models.UserModel">[docs]</a><span class="k">class</span> <span class="nc">UserModel</span><span class="p">(</span><span class="n">UserMixin</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    __tablename__ = &#39;users&#39;</span>
+
+<span class="sd">    id = db.Column(db.Integer, primary_key=True)</span>
+<span class="sd">    email = db.Column(db.String(64), unique=True, index=True)</span>
+<span class="sd">    username = db.Column(db.String(64), unique=True, index=True)</span>
+<span class="sd">    role_id = db.Column(db.Integer, db.ForeignKey(&#39;roles.id&#39;))</span>
+<span class="sd">    password_hash = db.Column(db.String(128))</span>
+<span class="sd">    name = db.Column(db.String(64))</span>
+<span class="sd">    location = db.Column(db.String(64))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># __________________________________</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;User </span><span class="si">%r</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span>
+    <span class="c1"># __________________________________</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">QueryUser</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="c1"># __________________________________</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="UserModel.get_all"><a class="viewcode-back" href="../../api.html#app.models.UserModel.get_all">[docs]</a>    <span class="k">def</span> <span class="nf">get_all</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches all existent users from the DB.</span>
+
+<span class="sd">        :Returns:</span>
+<span class="sd">            A list of User() objects - an object per fetched user.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">set_query</span><span class="p">()</span>
+        <span class="n">user_dicts</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">cls</span><span class="p">()</span><span class="o">.</span><span class="n">set_user_attributes</span><span class="p">(</span><span class="n">user_dict</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">user_dict</span> <span class="ow">in</span> <span class="n">user_dicts</span>
+        <span class="p">]</span></div>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">json_user</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;api.get_user&#39;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">_external</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+            <span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">role</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">json_user</span>
+
+    <span class="c1"># __________________________________</span>
+
+<div class="viewcode-block" id="UserModel.can"><a class="viewcode-back" href="../../api.html#app.models.UserModel.can">[docs]</a>    <span class="k">def</span> <span class="nf">can</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permissions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Figures out whether the current role can do anything</span>
+<span class="sd">        given a set of permissions to check against.</span>
+
+<span class="sd">        :Returns:</span>
+<span class="sd">            bool : True or False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Current role: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">role</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">userd</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">userd</span><span class="p">[</span><span class="s1">&#39;permissions&#39;</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">permissions</span><span class="p">)</span> <span class="o">==</span> <span class="n">permissions</span></div>
+    <span class="c1"># __________________________________</span>
+
+    <span class="k">def</span> <span class="nf">is_admin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can</span><span class="p">(</span><span class="n">Permission</span><span class="o">.</span><span class="n">ADMINISTER</span><span class="p">)</span>
+    <span class="c1"># __________________________________</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">insert_initial_users</span><span class="p">():</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;bobo@infinidat.com&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s1">&#39;bobo&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="s1">&#39;1234&#39;</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;vziv@infinidat.com&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;username&#39;</span><span class="p">:</span> <span class="s1">&#39;vziv&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="s1">&#39;1234&#39;</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+            <span class="n">User</span><span class="p">()</span><span class="o">.</span><span class="n">save_user</span><span class="p">(</span><span class="o">**</span><span class="n">u</span><span class="p">)</span>
+
+    <span class="c1"># __________________________________</span>
+
+    <span class="k">def</span> <span class="nf">save_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">email</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">password</span>
+
+        <span class="c1"># Set user role</span>
+        <span class="k">if</span> <span class="n">role</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+            <span class="c1"># user is an administrator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="n">Role</span><span class="p">()</span><span class="o">.</span><span class="n">get_by_field</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;permissions&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mh">0xFF</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="n">Role</span><span class="p">()</span><span class="o">.</span><span class="n">get_by_field</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">role</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+        <span class="n">new_user_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+            <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">password_hash</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">password_hash</span><span class="p">,</span>
+            <span class="n">role_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">role</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;New user ID: </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">new_user_id</span><span class="p">)</span>
+        <span class="n">current_app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;New user ID: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">new_user_id</span><span class="p">)</span>
+
+        <span class="n">userd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_by_field</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">new_user_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">User</span><span class="p">(</span><span class="o">**</span><span class="n">userd</span><span class="p">)</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">exists_by_username</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="n">userd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">read_one_by_field</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">userd</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">exists_by_email</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">):</span>
+        <span class="n">userd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">read_one_by_field</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="n">email</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">userd</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">generate_auth_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expiration</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">Serializer</span><span class="p">(</span><span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">],</span> <span class="n">expires_in</span><span class="o">=</span><span class="n">expiration</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+
+    <span class="c1"># ____________________________</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">verify_auth_token</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">Serializer</span><span class="p">(</span><span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">User</span><span class="p">()</span><span class="o">.</span><span class="n">get_by_field</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+    <span class="c1"># ____________________________</span>
+
+    <span class="k">def</span> <span class="nf">verify_password</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">check_password_hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">password_hash</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+
+    <span class="c1"># __________________________________</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">password</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;password is not a readable attribute&#39;</span><span class="p">)</span>
+    <span class="c1"># __________________________________</span>
+
+    <span class="nd">@password</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">password</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password_hash</span> <span class="o">=</span> <span class="n">generate_password_hash</span><span class="p">(</span><span class="n">password</span><span class="p">)</span></div>
+
+<span class="c1"># ===========================</span>
+
+
+<span class="n">login_manager</span><span class="o">.</span><span class="n">anonymous_user</span> <span class="o">=</span> <span class="n">AnonymousUser</span>
+
+
+<span class="nd">@login_manager</span><span class="o">.</span><span class="n">user_loader</span>
+<span class="k">def</span> <span class="nf">load_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">User</span><span class="p">()</span><span class="o">.</span><span class="n">get_by_field</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/infinidat-logo-small.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction to IVT Dashboard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">IVT Dashboard tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Bobo Mintz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

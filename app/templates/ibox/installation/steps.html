@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+
+    <div class="row ibox_installation_steps_row">
+        <div class="col-sm-12" id="ibox_installation_steps_grid_container">
+            <table id="ibox_installation_steps_grid" class="summary_report"></table> 
+            <div id="ibox_installation_steps_grid_pager" class="summary_report_pager"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block docready %} 
+    jQuery("li#nav-ibox-install").addClass("active");
+    {% include  "ibox/installation/steps.js" %}
+{% endblock %} 
