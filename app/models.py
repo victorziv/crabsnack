@@ -299,6 +299,8 @@ class User(UserMixin, BaseModel):
         else:
             role = Role().get_by_field(name='name', value=role.lower())
 
+        print("Role: {}".format(role))
+
         new_user_id = self.query.create_oauth(
             email=email,
             username=username,
