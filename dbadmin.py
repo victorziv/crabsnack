@@ -236,6 +236,7 @@ class DBAdmin(object):
             CREATE TABLE IF NOT EXISTS users (
                 id serial PRIMARY KEY,
                 social_id VARCHAR(64) UNIQUE,
+                username VARCHAR(128),
                 email VARCHAR(64) UNIQUE,
                 password_hash VARCHAR(128),
                 role_id INTEGER REFERENCES roles(id)
