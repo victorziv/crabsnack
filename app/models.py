@@ -13,10 +13,10 @@ from app.dbmodels.query_installation import QueryInstallation
 
 
 class Permission:
-    FOLLOW = 0x01          # 0b00000001
-    COMMENT = 0x02             # 0b00000010
+    FOLLOW = 0x01               # 0b00000001
+    COMMENT = 0x02              # 0b00000010
     WRITE_ARTICLES = 0x04       # 0b00000100
-    MODERATE_COMMENTS = 0x08  # 0b00001000
+    MODERATE_COMMENTS = 0x08    # 0b00001000
     ADMINISTER = 0x80           # 0b10000000
 
 # ===========================
@@ -70,11 +70,12 @@ class Role(BaseModel):
 
     def insert_roles(self):
         """
+        Create a new role only if not already in DB.
+        Otherwise - update.
         """
         roles = {
             'external_user': (
-                Permission.FOLLOW,
-                Permission.COMMENT, False),
+                Permission.FOLLOW, False),
 
             'user': (Permission.FOLLOW |
                      Permission.COMMENT |
@@ -96,11 +97,14 @@ class Role(BaseModel):
                 role = dict(
                     name=r,
                     permissions=roles[r][0],
-                    default=roles[r][1]
+                    isdefault=roles[r][1]
                 )
 
                 self.query.create(role)
-
+            else:
+                role['permissions'] = roles[r][0],
+                role['isdefault'] = roles[r][1]
+                self.query.update(role)
 # ===========================
 
 
@@ -274,14 +278,20 @@ class User(UserMixin, BaseModel):
     def insert_initial_users():
         users = [
             {
-                'email': 'bobo@infinidat.com',
+                'email': 'victor_ziv@yahoo.com',
                 'username': 'Bobo Mintz',
                 'password': '1234'
             },
             {
-                'email': 'vziv@infinidat.com',
-                'username': 'Victor Ziv',
+                'email': 'ziv.victor@gmail.com',
+                'username': 'Donald Duck',
                 'role': 'admin',
+                'password': '1234'
+            },
+            {
+                'email': 'victor@colabo.com',
+                'username': 'External Creature',
+                'role': 'external_user',
                 'password': '1234'
             }
         ]

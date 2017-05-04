@@ -52,7 +52,7 @@ class QueryRole:
     def create(self, record):
         """
         name = db.Column(db.String(64), unique=True)
-        default = db.Column(db.Boolean, default=False, index=True)
+        isdefault = db.Column(db.Boolean, default=False, index=True)
         permissions = db.Column(db.Integer)
         """
 
@@ -62,13 +62,39 @@ class QueryRole:
             RETURNING id
         """
 
-        params = (record['name'], record['default'], record['permissions'])
+        params = (record['name'], record['isdefault'], record['permissions'])
 
         try:
             self.db.cur.execute(query, params)
             self.db.conn.commit()
             fetch = self.db.cur.fetchone()
             return fetch['id']
+        except DatabaseError as e:
+            print('ERROR: %s' % e)
+            self.db.conn.rollback()
+            return
+    # ____________________________
+
+    def update(self, record):
+        """
+        name = db.Column(db.String(64), unique=True)
+        isdefault = db.Column(db.Boolean, default=False, index=True)
+        permissions = db.Column(db.Integer)
+        """
+
+        query = """
+            UPDATE  roles
+            SET
+                isdefault = %s,
+                permissions = %s
+            WHERE name = %s
+        """
+
+        params = (record['isdefault'], record['permissions'], record['name'])
+
+        try:
+            self.db.cur.execute(query, params)
+            self.db.conn.commit()
         except DatabaseError as e:
             print('ERROR: %s' % e)
             self.db.conn.rollback()
