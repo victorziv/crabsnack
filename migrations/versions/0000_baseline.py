@@ -44,9 +44,9 @@ def create_table_users(conn):
     query = """
         CREATE TABLE IF NOT EXISTS users (
             id serial PRIMARY KEY,
-            social_id VARCHAR(64) NOT NULL UNIQUE,
+            social_id VARCHAR(64) UNIQUE,
             email VARCHAR(64) UNIQUE,
-            username VARCHAR(64) UNIQUE,
+            username VARCHAR(128),
             password_hash VARCHAR(128),
             role_id INTEGER REFERENCES roles(id)
         );

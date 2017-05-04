@@ -274,12 +274,13 @@ class User(UserMixin, BaseModel):
         users = [
             {
                 'email': 'bobo@infinidat.com',
-                'username': 'bobo',
+                'username': 'Bobo Mintz',
                 'password': '1234'
             },
             {
                 'email': 'vziv@infinidat.com',
-                'username': 'vziv',
+                'username': 'Victor Ziv',
+                'role': 'admin',
                 'password': '1234'
             }
         ]
@@ -298,6 +299,8 @@ class User(UserMixin, BaseModel):
         else:
             role = Role().get_by_field(name='name', value=role.lower())
 
+        print("Role: {}".format(role))
+
         new_user_id = self.query.create_oauth(
             email=email,
             username=username,
@@ -312,7 +315,7 @@ class User(UserMixin, BaseModel):
         return user
     # ____________________________
 
-    def save_user(self, email, username, password, role='user'):
+    def save_user(self, email, password, role='user', username=None):
 
         # Set user role
         if role.lower() == 'admin':
@@ -322,19 +325,20 @@ class User(UserMixin, BaseModel):
             role = Role().get_by_field(name='name', value=role.lower())
 
         password_hash = generate_password_hash(password)
+        if username is None:
+            username = email
 
         new_user_id = self.query.create(
             email=email,
             username=username,
             password_hash=password_hash,
-            role_id=role['id']
+            role_id=role.id
         )
 
         print("New user ID: %r" % new_user_id)
         current_app.logger.info("New user ID: %r", new_user_id)
 
-        userd = self.get_by_field(name='id', value=new_user_id)
-        return User(**userd)
+        return self.get_by_field(name='id', value=new_user_id)
     # ____________________________
 
     def exists_by_username(self, username):

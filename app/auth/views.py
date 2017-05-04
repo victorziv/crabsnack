@@ -50,8 +50,9 @@ def login():
         app.logger.debug("User found: %r", user)
         app.logger.debug("User type: {}".format(type(user)))
 
-        if user is not None and hasattr(user, 'id') and user.verify_password(form.password.data):
+        if user is not None and hasattr(user, 'id') and user.password_hash and user.verify_password(form.password.data):  # noqa
             app.logger.debug("User {} is verified".format(user))
+            app.logger.debug("User {} session will be kept? {}".format(user, form.remember_me.data))
             login_user(user, form.remember_me.data)
             return redirect(request.args.get('next') or url_for('main.index'))
 
@@ -72,12 +73,32 @@ def register():
         flash('You can now login.')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
+# _______________________________
 
 
 @auth.route('/logout')
 @login_required
 def logout():
     logout_user()
-#    flash("You have been logged out!")
+    flash("You have been logged out!")
     return redirect(url_for('main.index'))
 # __________________________________________
+
+
+# @auth.route('/reset', methods=['GET', 'POST'])
+# def password_reset_request():
+#     if not current_user.is_anonymous:
+#         return redirect(url_for('main.index'))
+#     form = PasswordResetRequestForm()
+#     if form.validate_on_submit():
+#         user = User.query.filter_by(email=form.email.data).first()
+#         if user:
+#             token = user.generate_reset_token()
+#             send_email(user.email, 'Reset Your Password',
+#                        'auth/email/reset_password',
+#                        user=user, token=token,
+#                        next=request.args.get('next'))
+#         flash('An email with instructions to reset your password has been '
+#               'sent to you.')
+#         return redirect(url_for('auth.login'))
+#     return render_template('auth/reset_password.html', form=form)
