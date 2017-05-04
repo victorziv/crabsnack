@@ -52,6 +52,7 @@ def login():
 
         if user is not None and hasattr(user, 'id') and user.password_hash and user.verify_password(form.password.data):  # noqa
             app.logger.debug("User {} is verified".format(user))
+            app.logger.debug("User {} session will be kept? {}".format(user, form.remember_me.data))
             login_user(user, form.remember_me.data)
             return redirect(request.args.get('next') or url_for('main.index'))
 
@@ -79,7 +80,7 @@ def register():
 @login_required
 def logout():
     logout_user()
-#    flash("You have been logged out!")
+    flash("You have been logged out!")
     return redirect(url_for('main.index'))
 # __________________________________________
 
