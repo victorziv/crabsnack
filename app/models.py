@@ -13,10 +13,10 @@ from app.dbmodels.query_installation import QueryInstallation
 
 
 class Permission:
-    VIEW_REPORT = 0x01          # 0b00000001
-    RUN_CASE = 0x02             # 0b00000010
-    WRITE_COMMENTS = 0x04       # 0b00000100
-    ADMINISTER_EXTERNAL = 0x08  # 0b00001000
+    FOLLOW = 0x01          # 0b00000001
+    COMMENT = 0x02             # 0b00000010
+    WRITE_ARTICLES = 0x04       # 0b00000100
+    MODERATE_COMMENTS = 0x08  # 0b00001000
     ADMINISTER = 0x80           # 0b10000000
 
 # ===========================
