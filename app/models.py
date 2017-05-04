@@ -192,11 +192,6 @@ class AnonymousUser(AnonymousUserMixin):
 
                    <a href="https://jira.infinidat.com/browse/IVTS-415" target="_blank">IVTS-415</a>
 
-            testplan: |testplan_link|
-                .. |testplan_link| raw:: html
-
-                   <a href="https://jira.infinidat.com/browse/IVTS-414" target="_blank">IVTS-414</a>
-
         """
         return False
     # ____________________________
@@ -266,8 +261,8 @@ class User(UserMixin, BaseModel):
 
         """
         current_app.logger.info("Current role: %r", self.role)
-        return self.userd['role'] is not None and (
-            self.userd['permissions'] & permissions) == permissions
+        return self['role'] is not None and (
+            self.permissions & permissions) == permissions
     # __________________________________
 
     def is_admin(self):

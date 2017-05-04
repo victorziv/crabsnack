@@ -38,6 +38,6 @@ def admin_site():
 @main.route('/moderator')
 @login_required
 @permission_required(Permission.MODERATE_COMMENTS)
-def admin_external_users():
-    return "Administer outsource guys"
+def moderate_comment():
+    return "Yep, throw that schmuck away!"
 # _______________________________

@@ -9,17 +9,18 @@ from .models import Permission
 
 # ___________________________________
 
+
 def permission_required(permission):
     def decorator(f):
         @wraps(f)
-        def decorated_func(*args, **kwargs):     
+        def decorated_func(*args, **kwargs):
             if not current_user.can(permission):
                 abort(403)
             return f(*args, **kwargs)
         return decorated_func
     return decorator
-        
 # ___________________________________
+
 
 def admin_required(f):
     return permission_required(Permission.ADMINISTER)(f)

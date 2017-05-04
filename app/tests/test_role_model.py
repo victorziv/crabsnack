@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa
 from app import create_app
 from app.models import Role
 
