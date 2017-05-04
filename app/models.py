@@ -56,7 +56,7 @@ class Role(BaseModel):
     Anonymous       0b00000000 (0x00) # not-logged in - nothing allowed
     ExternalUser    0b00000001 (0x01) # View reports only
     User            0b00000111 (0x07) # View reports, run cases, write comments
-    ExternalAdmin   0b00001111 (0xf0) # Administer external users
+    Moderator       0b00001111 (0xf0) # Administer external users
     Admin           0b11111111 (0xFF) # Administer all
 
     """
@@ -72,18 +72,19 @@ class Role(BaseModel):
         """
         """
         roles = {
-            'external_user': (Permission.VIEW_REPORT, False),
+            'external_user': (
+                Permission.FOLLOW,
+                Permission.COMMENT, False),
 
-            'user': (Permission.VIEW_REPORT |
-                     Permission.RUN_CASE |
-                     Permission.WRITE_COMMENTS, True),
+            'user': (Permission.FOLLOW |
+                     Permission.COMMENT |
+                     Permission.WRITE_ARTICLES, True),
 
-            'external_admin': (
-                 Permission.VIEW_REPORT |  # noqa
-                 Permission.RUN_CASE |
-                 Permission.WRITE_COMMENTS |
-                 Permission.ADMINISTER_EXTERNAL, False
-            ),
+            'moderator': (
+                Permission.FOLLOW |
+                Permission.COMMENT |
+                Permission.WRITE_ARTICLES |
+                Permission.MODERATE_COMMENTS, False),
 
             'admin': (0xff, False)
         }
