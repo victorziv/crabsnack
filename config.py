@@ -95,7 +95,6 @@ class Config:
     @staticmethod
     def init_app(app):
         pass
-
 # ===================================
 
 
@@ -112,7 +111,7 @@ class DevelopmentConfig(Config):
     @staticmethod
     def init_logging(app):
         logpath = 'logs'
-        logfile = 'dashboarddev.log'
+        logfile = '%s.log' % Config.PROJECT
         loglevel = 'DEBUG'
         return Config.init_logging(app, logpath, logfile, loglevel)
     # ________________________________
@@ -121,9 +120,8 @@ class DevelopmentConfig(Config):
     def init_app(app):
         app = DevelopmentConfig.init_logging(app)
         return app
-
-
 # ===================================
+
 
 class TestingConfig(Config):
     TESTING = True
