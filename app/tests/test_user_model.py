@@ -1,16 +1,20 @@
 import pytest  # noqa
 from app import create_app
-from app.models import Role
+from app.models import Role, User, AnonymousUser, Permission
+# ====================================
 
 
-class TestRoleModel:
+class TestUserModel:
 
     @classmethod
     def setup_class(cls):
         cls.app = create_app('testing')
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
+        cls.app.db.create_tables()
         cls.password = 'mucho'
+        role = Role()
+        role.insert_roles()
     # ______________________________
 
     @classmethod
@@ -28,13 +32,14 @@ class TestRoleModel:
 
     # ______________________________
 
-    def test_insert_roles(self):
-        role = Role()
-        role.insert_roles()
+    def test_user(self):
+        u = User()
+        u.save_user(email='frida@nowhere.com', password='getout', role='user', username='Frida Zandberg')
+        assert u.can(Permission.FOLLOW)
+        assert u.can(Permission.WRITE_ARTICLES)
+        assert not u.can(Permission.MODERATE_COMMENTS)
     # ______________________________
 
-    def test_fetch_role(self):
-        role = Role()
-        admin = role.get_by_field(name='name', value='admin')
-        print("Fetched role: %r" % admin)
-        assert admin['name'] == 'admin'
+    def test_anonymous_user(self):
+        u = AnonymousUser()
+        assert not u.can(Permission.FOLLOW)

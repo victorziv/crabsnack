@@ -192,11 +192,6 @@ class AnonymousUser(AnonymousUserMixin):
 
                    <a href="https://jira.infinidat.com/browse/IVTS-415" target="_blank">IVTS-415</a>
 
-            testplan: |testplan_link|
-                .. |testplan_link| raw:: html
-
-                   <a href="https://jira.infinidat.com/browse/IVTS-414" target="_blank">IVTS-414</a>
-
         """
         return False
     # ____________________________
