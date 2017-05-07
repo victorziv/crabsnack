@@ -266,8 +266,8 @@ class User(UserMixin, BaseModel):
 
         """
         current_app.logger.info("Current role: %r", self.role)
-        return self.userd['role'] is not None and (
-            self.userd['permissions'] & permissions) == permissions
+        return self.role is not None and (
+            self.permissions & permissions) == permissions
     # __________________________________
 
     def is_admin(self):

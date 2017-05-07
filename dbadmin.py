@@ -140,62 +140,43 @@ class DBAdmin(object):
         self.apply_versions(versions)
     # _____________________________
 
-#    def create_changelog_table(self):
-#        """
-#        """
+    def create_table_roles(self):
+        """
+        class models.Role
+        id = db.Column(db.Integer, primary_key=True)
+        name = db.Column(db.String(64), unique=True)
+        isdefault = db.Column(db.Boolean, default=False, index=True)
+        permissions = db.Column(db.Integer)
+        """
 
-#        query = """
-#            CREATE TABLE IF NOT EXISTS changelog (
-#                id serial PRIMARY KEY,
-#                name VARCHAR(64) UNIQUE,
-#                filenumber VARCHAR(4),
-#                dateapplied TIMESTAMP,
-#                comment VARCHAR(255)
-#            );
-#        """
-#        params = {}
+        query = """
+            CREATE TABLE IF NOT EXISTS roles (
+               id serial PRIMARY KEY,
+               name VARCHAR(64) UNIQUE,
+               isdefault BOOLEAN DEFAULT FALSE,
+               permissions INTEGER
+            );
+        """
+        params = {}
 
-#        self.cur.execute(query, params)
-#        self.conn.commit()
+        self.cur.execute(query, params)
+        self.conn.commit()
     # _____________________________
 
-#    def create_table_roles(self):
-#        """
-#        class models.Role
-#        id = db.Column(db.Integer, primary_key=True)
-#        name = db.Column(db.String(64), unique=True)
-#        default = db.Column(db.Boolean, default=False, index=True)
-#        permissions = db.Column(db.Integer)
-#        """
+    def create_table_changelog(self):
 
-#        query = """
-#            CREATE TABLE IF NOT EXISTS roles (
-#                id serial PRIMARY KEY,
-#                name VARCHAR(64) UNIQUE,
-#                isdefault BOOLEAN DEFAULT FALSE,
-#                permissions INTEGER
-#            );
-#        """
-#        params = {}
+        query = """
+           CREATE TABLE IF NOT EXISTS changelog (
+               id serial PRIMARY KEY,
+               version VARCHAR(4),
+               name VARCHAR(100) UNIQUE,
+               applied TIMESTAMP
+           );
+        """
+        params = {}
 
-#        self.cur.execute(query, params)
-#        self.conn.commit()
-    # _____________________________
-
-#    def create_table_changelog(self):
-
-#        query = """
-#            CREATE TABLE IF NOT EXISTS changelog (
-#                id serial PRIMARY KEY,
-#                version VARCHAR(4),
-#                name VARCHAR(100) UNIQUE,
-#                applied TIMESTAMP
-#            );
-#        """
-#        params = {}
-
-#        self.cur.execute(query, params)
-#        self.conn.commit()
+        self.cur.execute(query, params)
+        self.conn.commit()
     # _____________________________
 
     def create_table_installationstep(self):
@@ -354,82 +335,3 @@ class DBAdmin(object):
         return versions
 
     # ___________________________
-
-
-# class Baseline(object):
-
-#     def __init__(self, db):
-#         self.db = db
-
-    # ____________________________
-
-#     def create_tables(self):
-#         tables = current_app.config['DB_TABLES_BASELINE']
-#         for table in tables:
-#             self.db.drop_table(table)
-#             getattr(self.db, "create_table_%s" % table)()
-#             self.db.grant_access_to_table(table)
-    # ____________________________
-
-#     def insert_base_version(self):
-
-#         """
-#         """
-
-#         query = """
-#             INSERT INTO changelog
-#                 (version, name, applied)
-#             VALUES (%s, %s, %s)
-#             RETURNING id
-#         """
-
-#         params = (
-#             '0000',
-#             'initial_baseline',
-#             datetime.datetime.now()
-#         )
-
-#         try:
-#             self.db.cur.execute(query, params)
-#             self.db.conn.commit()
-#             fetch = self.db.cur.fetchone()
-#             return fetch['id']
-
-#         except IntegrityError as ie:
-#             print('ERROR: %s' % ie)
-#             self.db.conn.rollback()
-#             return
-#         except DatabaseError as dbe:
-#             print('ERROR: %s' % dbe)
-#             self.db.conn.rollback()
-#             return
-#     ____________________________
-
-# def set_baseline():
-
-#     """ Run deployment tasks. """
-
-#     current_app.db.create_baseline()
-#     Role().insert_roles()
-#     User().insert_initial_users()
-#     InstallationStep.insert_steps()
-# _____________________________
-
-# @manager.command
-# def dbmigrate(configkey):
-#     print("Config key %r" % configkey)
-#     app = create_app(configkey)
-#     app_context = app.app_context()
-#     app_context.push()
-#     connection_params = app.config['POSTGRES_CONNECTION_PARAMS']
-
-#     app.db = DBAdmin()
-#     try:
-#         conn, cursor = app.db.connectdb(**connection_params)
-#         upgradedb(app.db)
-#     except Exception:
-#         conn.rollback()
-#     finally:
-#         app_context.pop()
-#         cursor.close()
-#         conn.close()
