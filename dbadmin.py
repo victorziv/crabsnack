@@ -118,18 +118,17 @@ class DBAdmin(object):
                 continue
 
             try:
-
                 module_name = ver['module']
                 mod = importlib.import_module('migrations.versions.%s' % module_name)
                 mod.upgrade(self.conn)
-
+            except Exception as e:
+                print('ERROR: {}'.format(e))
+                self.conn.rollback()
+            else:
                 version = ver['version']
                 name = ver['name']
                 recordid = self.insert_changelog_record(version, name)
                 print("Changelog record ID for version {}: {}".format(recordid, ver))
-            except Exception as e:
-                print('ERROR: {}'.format(e))
-                self.conn.rollback()
 
     # _____________________________
 
