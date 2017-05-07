@@ -13,10 +13,10 @@ from app.dbmodels.query_installation import QueryInstallation
 
 
 class Permission:
-    VIEW_REPORT = 0x01          # 0b00000001
-    RUN_CASE = 0x02             # 0b00000010
-    WRITE_COMMENTS = 0x04       # 0b00000100
-    ADMINISTER_EXTERNAL = 0x08  # 0b00001000
+    FOLLOW = 0x01               # 0b00000001
+    COMMENT = 0x02              # 0b00000010
+    WRITE_ARTICLES = 0x04       # 0b00000100
+    MODERATE_COMMENTS = 0x08    # 0b00001000
     ADMINISTER = 0x80           # 0b10000000
 
 # ===========================
@@ -56,7 +56,7 @@ class Role(BaseModel):
     Anonymous       0b00000000 (0x00) # not-logged in - nothing allowed
     ExternalUser    0b00000001 (0x01) # View reports only
     User            0b00000111 (0x07) # View reports, run cases, write comments
-    ExternalAdmin   0b00001111 (0xf0) # Administer external users
+    Moderator       0b00001111 (0xf0) # Administer external users
     Admin           0b11111111 (0xFF) # Administer all
 
     """
@@ -70,20 +70,22 @@ class Role(BaseModel):
 
     def insert_roles(self):
         """
+        Create a new role only if not already in DB.
+        Otherwise - update.
         """
         roles = {
-            'external_user': (Permission.VIEW_REPORT, False),
+            'external_user': (
+                Permission.FOLLOW, False),
 
-            'user': (Permission.VIEW_REPORT |
-                     Permission.RUN_CASE |
-                     Permission.WRITE_COMMENTS, True),
+            'user': (Permission.FOLLOW |
+                     Permission.COMMENT |
+                     Permission.WRITE_ARTICLES, True),
 
-            'external_admin': (
-                 Permission.VIEW_REPORT |  # noqa
-                 Permission.RUN_CASE |
-                 Permission.WRITE_COMMENTS |
-                 Permission.ADMINISTER_EXTERNAL, False
-            ),
+            'moderator': (
+                Permission.FOLLOW |
+                Permission.COMMENT |
+                Permission.WRITE_ARTICLES |
+                Permission.MODERATE_COMMENTS, False),
 
             'admin': (0xff, False)
         }
@@ -95,11 +97,14 @@ class Role(BaseModel):
                 role = dict(
                     name=r,
                     permissions=roles[r][0],
-                    default=roles[r][1]
+                    isdefault=roles[r][1]
                 )
 
                 self.query.create(role)
-
+            else:
+                role['permissions'] = roles[r][0],
+                role['isdefault'] = roles[r][1]
+                self.query.update(role)
 # ===========================
 
 
@@ -187,11 +192,6 @@ class AnonymousUser(AnonymousUserMixin):
 
                    <a href="https://jira.infinidat.com/browse/IVTS-415" target="_blank">IVTS-415</a>
 
-            testplan: |testplan_link|
-                .. |testplan_link| raw:: html
-
-                   <a href="https://jira.infinidat.com/browse/IVTS-414" target="_blank">IVTS-414</a>
-
         """
         return False
     # ____________________________
@@ -261,8 +261,8 @@ class User(UserMixin, BaseModel):
 
         """
         current_app.logger.info("Current role: %r", self.role)
-        return self.userd['role'] is not None and (
-            self.userd['permissions'] & permissions) == permissions
+        return self.role is not None and (
+            self.permissions & permissions) == permissions
     # __________________________________
 
     def is_admin(self):
@@ -273,14 +273,20 @@ class User(UserMixin, BaseModel):
     def insert_initial_users():
         users = [
             {
-                'email': 'bobo@infinidat.com',
+                'email': 'victor_ziv@yahoo.com',
                 'username': 'Bobo Mintz',
                 'password': '1234'
             },
             {
-                'email': 'vziv@infinidat.com',
-                'username': 'Victor Ziv',
+                'email': 'ziv.victor@gmail.com',
+                'username': 'Donald Duck',
                 'role': 'admin',
+                'password': '1234'
+            },
+            {
+                'email': 'victor@colabo.com',
+                'username': 'External Creature',
+                'role': 'external_user',
                 'password': '1234'
             }
         ]

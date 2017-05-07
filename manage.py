@@ -157,7 +157,7 @@ def test(coverage=False):
         os.execvp(sys.executable, [sys.executable] + sys.argv)
 
     import pytest
-    pytest.main(['-v', 'tests/'])
+    pytest.main(['-v', 'app/tests/'])
 
     if COV:
         COV.stop()

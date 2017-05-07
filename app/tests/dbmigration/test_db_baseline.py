@@ -27,6 +27,7 @@ class TestBaseline:
     # ______________________________
 
     def create_table(self):
+        pass
 
     # ______________________________
 
