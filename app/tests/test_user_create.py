@@ -32,9 +32,9 @@ class TestUserCreate(object):
 
     def test_password_setter(self):
         u = User().save_user(
-                email='test3@nowhere.com',
-                username='test3',
-                password=self.password)
+            email='test3@nowhere.com',
+            username='test3',
+            password=self.password)
         u = User().get_by_field(name='username', value='test3')
         print("User test3: %r" % u)
         assert u['password_hash'] is not None
