@@ -6,8 +6,8 @@ def upgrade(conn, **kwargs):
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS location VARCHAR(64),
         ADD COLUMN IF NOT EXISTS about_me TEXT,
-        ADD COLUMN IF NOT EXISTS member_since TIMESTAMP DEFAULT now(),
-        ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT now()
+        ADD COLUMN IF NOT EXISTS member_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     """
     params = ()
     cursor = conn.cursor()
