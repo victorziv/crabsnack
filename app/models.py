@@ -295,7 +295,10 @@ class User(UserMixin, BaseModel):
 
     def update_last_seen(self):
         self.last_seen = datetime.utcnow()
-        self.query.update(email=self.email, params={'last_seen': self.last_seen})
+        self.query.update(
+            update_key_name='email',
+            update_key_value=self.email,
+            update_params={'last_seen': self.last_seen})
     # __________________________________
 
     def save_user_oauth(self, email, username, social_id, role='user'):

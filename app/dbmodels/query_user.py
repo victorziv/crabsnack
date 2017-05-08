@@ -1,6 +1,5 @@
 from psycopg2 import DatabaseError, ProgrammingError, IntegrityError
 from psycopg2.extensions import AsIs
-from psycopg2 import sql
 
 # ============================================
 
@@ -155,17 +154,11 @@ class QueryUser(object):
         self.db.conn.commit()
     # ____________________________
 
-    def update(self, email, params):
-        query = sql.SQL("""
-            UPDATE users
-            SET {} = %s
-            WHERE {} = %s
-        """).format(
-            sql.Identifier('last_seen'),
-            sql.Identifier('email'),
-        )
-
-        params = {params['last_seen'], email}
+    def update(self, update_key_name, update_key_value, update_params):
+        sql_template = "UPDATE users SET ({}) = %s WHERE {} = %s"
+        query = sql_template.format(', '.join(update_params.keys()), update_key_name)
+        params = (tuple(update_params.values()), update_key_value)
+        print(self.db.cur.mogrify(query, params))
         self.db.cur.execute(query, params)
         self.db.conn.commit()
     # ____________________________

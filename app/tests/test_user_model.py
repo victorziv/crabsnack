@@ -23,6 +23,12 @@ class TestUserModel:
 
     # ______________________________
 
+    def test_update_last_seen(self):
+        u = User()
+        u.save_user(email='victor_ziv@yahoo.com', password='1234', role='user', username='Bobo Mintz')
+        u.update_last_seen()
+    # ____________________________________
+
     def test_role_queries_object(self):
         role = Role()
         assert hasattr(role, 'query')
@@ -32,7 +38,7 @@ class TestUserModel:
 
     # ______________________________
 
-    def test_user(self):
+    def test_user_permissions(self):
         u = User()
         u.save_user(email='frida@nowhere.com', password='getout', role='user', username='Frida Zandberg')
         assert u.can(Permission.FOLLOW)
