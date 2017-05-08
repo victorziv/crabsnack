@@ -8,6 +8,13 @@ from .forms import LoginForm, RegistrationForm
 # __________________________________________
 
 
+@auth.before_app_request
+def before_request():
+    if current_user.is_authenticated():
+        current_user.update_last_seen()
+# __________________________________________
+
+
 @auth.route('/authorize/<provider>')
 def oauth_authorize(provider):
     if not current_user.is_anonymous:
