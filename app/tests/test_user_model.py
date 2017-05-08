@@ -1,3 +1,4 @@
+import time
 import pytest  # noqa
 from app import create_app
 from app.models import Role, User, AnonymousUser, Permission
@@ -26,6 +27,7 @@ class TestUserModel:
     def test_update_last_seen(self):
         u = User()
         u.save_user(email='victor_ziv@yahoo.com', password='1234', role='user', username='Bobo Mintz')
+        time.sleep(10)
         u.update_last_seen()
     # ____________________________________
 

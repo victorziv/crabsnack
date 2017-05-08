@@ -140,20 +140,12 @@ class DBAdmin(object):
     # _____________________________
 
     def create_table_roles(self):
-        """
-        class models.Role
-        id = db.Column(db.Integer, primary_key=True)
-        name = db.Column(db.String(64), unique=True)
-        isdefault = db.Column(db.Boolean, default=False, index=True)
-        permissions = db.Column(db.Integer)
-        """
-
         query = """
             CREATE TABLE IF NOT EXISTS roles (
-               id serial PRIMARY KEY,
-               name VARCHAR(64) UNIQUE,
-               isdefault BOOLEAN DEFAULT FALSE,
-               permissions INTEGER
+                id serial PRIMARY KEY,
+                name VARCHAR(64) UNIQUE,
+                isdefault BOOLEAN DEFAULT FALSE,
+                permissions INTEGER
             );
         """
         params = {}
@@ -219,7 +211,11 @@ class DBAdmin(object):
                 username VARCHAR(128),
                 email VARCHAR(64) UNIQUE,
                 password_hash VARCHAR(128),
-                role_id INTEGER REFERENCES roles(id)
+                role_id INTEGER REFERENCES roles(id),
+                location VARCHAR(64),
+                about_me TEXT,
+                member_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """
         params = {}

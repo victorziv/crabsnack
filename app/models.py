@@ -294,7 +294,7 @@ class User(UserMixin, BaseModel):
     # __________________________________
 
     def update_last_seen(self):
-        self.last_seen = datetime.utcnow()
+        self.last_seen = datetime.now()
         self.query.update(
             update_key_name='email',
             update_key_value=self.email,
