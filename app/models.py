@@ -1,4 +1,4 @@
-from collections import namedtuple
+from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import url_for
@@ -108,13 +108,7 @@ class Role(BaseModel):
 # ===========================
 
 
-Installation = namedtuple(
-    'Installation',
-    ['id', 'step', 'step_name']
-)
-
-
-class InstallationModel(BaseModel):
+class Installation(BaseModel):
     """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
@@ -212,7 +206,10 @@ class User(UserMixin, BaseModel):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     name = db.Column(db.String(64))
-    location = db.Column(db.String(64))
+    location  VARCHAR(64))
+    about_me TEXT,
+    member_since TIMESTAMP
+    last_seen TIMESTAMP
     """
     # __________________________________
 
@@ -294,6 +291,11 @@ class User(UserMixin, BaseModel):
         for u in users:
             User().save_user(**u)
 
+    # __________________________________
+
+    def update_last_seen(self):
+        self.last_seen = datetime.utcnow()
+        self.query.update({'last_seen': self.last_seen})
     # __________________________________
 
     def save_user_oauth(self, email, username, social_id, role='user'):

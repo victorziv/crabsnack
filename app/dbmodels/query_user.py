@@ -153,11 +153,22 @@ class QueryUser(object):
             DELETE FROM users
         """
         params = ()
-        try:
-            self.db.cur.execute(query, params)
-            self.db.conn.commit()
-        except DatabaseError as e:
-            print('ERROR: %s' % e)
-            self.db.conn.rollback()
-            return
+        self.db.cur.execute(query, params)
+        self.db.conn.commit()
+    # ____________________________
+
+    def update(self, email, name, value):
+        """
+
+        """
+
+        query = """
+            UPDATE  users
+            SET %s = %s
+            WHERE email = %s
+        """
+
+        params = (name, value, email)
+        self.db.cur.execute(query, params)
+        self.db.conn.commit()
     # ____________________________
