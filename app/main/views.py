@@ -1,9 +1,9 @@
 from datetime import datetime
-from flask import render_template, session, redirect, url_for
+from flask import render_template, session, redirect, url_for, abort
 from . import main
 from .forms import NameForm
 from flask_login import login_required
-from ..models import Permission
+from ..models import Permission, User
 from ..decorators import admin_required, permission_required
 # _______________________________
 
@@ -41,3 +41,11 @@ def admin_site():
 def moderate_comment():
     return "Yep, throw that schmuck away!"
 # _______________________________
+
+
+@main.route('/user/<email>')
+def user_profile(email):
+    u = User().get_by_field(name='email', value=email)
+    if u is None:
+        abort(404)
+    return render_template('user_profile.html', user=u)
