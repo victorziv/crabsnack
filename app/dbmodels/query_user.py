@@ -1,6 +1,6 @@
-import inspect
 from psycopg2 import DatabaseError, ProgrammingError, IntegrityError
 from psycopg2.extensions import AsIs
+from psycopg2 import sql
 
 # ============================================
 
@@ -11,11 +11,9 @@ class QueryUser(object):
     # ____________________________
 
     def read_one_by_field(self, **kwargs):
-        fname = inspect.currentframe().f_code.co_name
 
         if len(kwargs) != 1:
-            raise RuntimeError(
-                "%s accepts exactly one parameter for a field name" % fname)
+            raise RuntimeError("Accepts exactly one parameter for a field name")
 
         field = next(kwargs.__iter__())
 
@@ -157,18 +155,17 @@ class QueryUser(object):
         self.db.conn.commit()
     # ____________________________
 
-    def update(self, email, name, value):
-        """
+    def update(self, email, params):
+        query = sql.SQL("""
+            UPDATE users
+            SET {} = %s
+            WHERE {} = %s
+        """).format(
+            sql.Identifier('last_seen'),
+            sql.Identifier('email'),
+        )
 
-        """
-
-        query = """
-            UPDATE  users
-            SET %s = %s
-            WHERE email = %s
-        """
-
-        params = (name, value, email)
+        params = {params['last_seen'], email}
         self.db.cur.execute(query, params)
         self.db.conn.commit()
     # ____________________________
