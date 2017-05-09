@@ -48,4 +48,4 @@ def user_profile(email):
     u = User().get_by_field(name='email', value=email)
     if u is None:
         abort(404)
-    return render_template('user_profile.html', user=u)
+    return render_template('user_profile.html', user=u, current_time=datetime.utcnow())

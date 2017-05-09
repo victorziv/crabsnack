@@ -110,13 +110,13 @@
     <script src="https://cdn.jsdelivr.net/free-jqgrid/4.13.6/js/jquery.jqgrid.min.js"></script>
     <script language="javascript" src="{{ url_for('static', filename='js/jquery.jqgrid-4.14.0.min.js') }}"></script>
     <script language="javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    {{ moment.include_moment() }}
 
     {% block external_script %}{% endblock %} 
 
     <script>
 
         jQuery(document).ready(function () {
-            {{ moment.include_moment() }}
             {% block docready %}{% endblock %} 
         });
 
