@@ -26,12 +26,7 @@
         {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
             <p>
                 Member since {{ moment(user.member_since).format('L') }}.
-                Last seen {{ moment(user.last_seen).fromNow() }}.
+                Last seen {{ moment(user.last_seen).fromNow(refresh=True) }}.
             </p>
-
-            <p>Time now {{ moment().format('MMMM Do YYYY, h:mm:ss a') }}</p>
-            <p>The local date and time is {{ moment(current_time).format('LLL') }}.</p>
-            <p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
-
     </div>
 {% endblock %}

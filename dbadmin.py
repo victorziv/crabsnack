@@ -298,7 +298,7 @@ class DBAdmin(object):
                 VALUES (%s, %s, %s)
                 RETURNING id
             """
-            params = (version_number, name, datetime.datetime.now())
+            params = (version_number, name, datetime.datetime.utcnow())
 
             self.cur.execute(query, params)
             self.conn.commit()
