@@ -1,0 +1,32 @@
+{% block page_content %}
+    <div class="page-header">
+
+        {% if user.username %}
+            <h1>{{ user.username }}</h1>
+        {% else %}
+            <h1>{{ user.email }}</h1>
+        {% endif %}
+
+        {% if user.name or user.location %}
+            <p>
+                {% if user.name %}{{ user.name }}{% endif %}
+                {% if user.location %}
+                    From <a href="http://maps.google.com/?q={{ user.location }}"> {{ user.location }} </a>
+                {% endif %}
+            </p>
+        {% endif %}
+
+        {% if current_user.is_administrator() %}
+            <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+        {% endif %}
+
+
+        {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+        <p>
+            Member since {{ user.member_since }}.
+            Last seen {{ user.last_seen }}.
+            Time now {{ moment().format('MMMM Do YYYY, h:mm:ss a') }}
+        </p>
+
+    </div>
+{% endblock %}

@@ -262,7 +262,7 @@ class User(UserMixin, BaseModel):
             self.permissions & permissions) == permissions
     # __________________________________
 
-    def is_admin(self):
+    def is_administrator(self):
         return self.can(Permission.ADMINISTER)
     # __________________________________
 

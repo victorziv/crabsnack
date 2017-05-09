@@ -15,6 +15,8 @@ class QueryUser(object):
             raise RuntimeError("Accepts exactly one parameter for a field name")
 
         field = next(kwargs.__iter__())
+        print("====> FIELD: {}".format(field))
+        print("====> FIELD value: {}".format(kwargs[field]))
 
         query = """
             SELECT
@@ -22,6 +24,10 @@ class QueryUser(object):
                 u.email,
                 u.username,
                 u.password_hash,
+                u.location,
+                u.about_me,
+                u.member_since,
+                u.last_seen,
                 r.name AS role,
                 r.permissions
             FROM users AS u, roles AS r
@@ -46,6 +52,7 @@ class QueryUser(object):
             else:
                 raise
         else:
+            print('Fetch: {}'.format(fetch))
             return fetch
     # ____________________________
 

@@ -10,7 +10,7 @@ from .forms import LoginForm, RegistrationForm
 
 @auth.before_app_request
 def before_request():
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         current_user.update_last_seen()
 # __________________________________________
 

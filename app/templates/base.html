@@ -65,6 +65,14 @@
                     </a>
                 </li>
 
+                {% if current_user.is_authenticated %}
+                <li>
+                    <a href="{{ url_for('main.user_profile', email=current_user.email) }}">
+                        Profile
+                    </a>
+                </li>
+                {% endif %}
+
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
@@ -108,6 +116,7 @@
     <script>
 
         jQuery(document).ready(function () {
+            {{ moment.include_moment() }}
             {% block docready %}{% endblock %} 
         });
 
