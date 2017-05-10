@@ -24,6 +24,23 @@ class Permission:
 
 class BaseModel(object):
 
+    @classmethod
+    def fetch_all(cls):
+        model_list = cls.query.read()
+        return [cls(attrs=m) for m in model_list]
+    # __________________________________
+
+    @classmethod
+    def fetch_by_field(cls, name, value):
+        kwargs = {name: value}
+        modeld = cls.query.read_one_by_field(**kwargs)
+        if modeld is None:
+            return
+
+        model_instance = cls(attrs=dict(modeld))
+        return model_instance
+    # __________________________________
+
     def get_by_field(self, name, value):
         kwargs = {name: value}
         modeld = self.query.read_one_by_field(**kwargs)
@@ -61,11 +78,13 @@ class Role(BaseModel):
 
     """
     __tablename__ = 'roles'
+    query = QueryRole(db)
 
     # ____________________________
 
-    def __init__(self):
+    def __init__(self, attrs):
         self.query = QueryRole(db)
+        self.__dict__.update(attrs)
     # ____________________________
 
     def insert_roles(self):

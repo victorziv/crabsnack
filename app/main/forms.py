@@ -1,9 +1,13 @@
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, BooleanField, SubmitField,
-    TextAreaField, Email, Regexp, SelectField)
+    TextAreaField, SelectField,
+    ValidationError
+)
 
-from wtforms.validators import DataRequired, Required, Length
+from wtforms.validators import (
+    Email, Regexp, DataRequired, Required, Length)
+
 from ..models import Role, User
 
 
@@ -47,7 +51,7 @@ class EditProfileAdminForm(FlaskForm):
 
     def __init__(self, user, *args, **kwargs):
         super(EditProfileAdminForm, self).__init__(*args, **kwargs)
-        self.role.choices = [(role.id, role.name) for role in Role.query.order_by(Role.name).all()]
+        self.role.choices = [(role.id, role.name) for role in Role.fetch_all()]
         self.user = user
     # _________________________________
 
