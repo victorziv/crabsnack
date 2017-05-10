@@ -60,9 +60,13 @@ def edit_profile():
         current_user.username = form.username.data
         current_user.location = form.location.data
         current_user.about_me = form.about_me.data
-        User().save_user(current_user)
+        current_user.update_user({
+            'username': current_user.username,
+            'location': current_user.location,
+            'about_me': current_user.about_me
+        })
         flash('Your profile has been updated.')
-        return redirect(url_for('.user_profile', username=current_user.username))
+        return redirect(url_for('.user_profile', email=current_user.email))
 
     form.username.data = current_user.username
     form.location.data = current_user.location

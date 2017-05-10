@@ -293,14 +293,6 @@ class User(UserMixin, BaseModel):
 
     # __________________________________
 
-    def update_last_seen(self):
-        self.last_seen = datetime.utcnow()
-        self.query.update(
-            update_key_name='email',
-            update_key_value=self.email,
-            update_params={'last_seen': self.last_seen})
-    # __________________________________
-
     def save_user_oauth(self, email, username, social_id, role='user'):
 
         # Set user role
@@ -371,8 +363,23 @@ class User(UserMixin, BaseModel):
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
+    # __________________________________
 
-    # ____________________________
+    def update_last_seen(self):
+        self.last_seen = datetime.utcnow()
+        self.query.update(
+            update_key_name='email',
+            update_key_value=self.email,
+            update_params={'last_seen': self.last_seen})
+    # __________________________________
+
+    def update_user(self, params):
+        self.last_seen = datetime.utcnow()
+        self.query.update(
+            update_key_name='email',
+            update_key_value=self.email,
+            update_params=params)
+    # __________________________________
 
     @staticmethod
     def verify_auth_token(token):
