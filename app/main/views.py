@@ -1,9 +1,13 @@
 from datetime import datetime
-from flask import render_template, session, redirect, url_for, abort, flash
+from flask import (
+    render_template,
+    session, redirect,
+    url_for, abort, flash,
+)
 from . import main
-from .forms import NameForm, EditProfileForm
+from .forms import NameForm, EditProfileForm, EditProfileAdminForm
 from flask_login import login_required, current_user
-from ..models import Permission, User
+from ..models import Permission, User, Role
 from ..decorators import admin_required, permission_required
 # _______________________________
 
@@ -22,7 +26,6 @@ def index():
         known=session.get('known', False),
         current_time=datetime.utcnow()
     )
-
 # _______________________________
 
 
@@ -30,7 +33,7 @@ def index():
 @login_required
 @admin_required
 def edit_profile_admin():
-    user = User.query.get_or_404(id)
+    user = User.get_by_field_or_404(name='id', value=id)
     form = EditProfileAdminForm(user=user)
 
     if form.validate_on_submit():
@@ -40,7 +43,7 @@ def edit_profile_admin():
         user.role = Role.query.get(form.role.data)
         user.location = form.location.data
         user.about_me = form.about_me.data
-        db.session.add(user)
+        User.save_user(user)
         flash('The profile has been updated.')
         return redirect(url_for('.user', username=user.username))
 

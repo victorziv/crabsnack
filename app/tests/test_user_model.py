@@ -1,4 +1,5 @@
-import pytest  # noqa
+import pytest
+import werkzeug
 from app import create_app
 from app.models import Role, User, AnonymousUser, Permission
 # ====================================
@@ -23,8 +24,7 @@ class TestUserModel:
     # ______________________________
 
     def test_update_last_seen(self):
-        u = User()
-        u.save_user(email='victor_ziv@yahoo.com', password='1234', role='user', username='Bobo Mintz')
+        u = User.save_user(email='victor_ziv@yahoo.com', password='1234', role='user', username='Bobo Mintz')
         u.update_last_seen()
     # ____________________________________
 
@@ -38,11 +38,15 @@ class TestUserModel:
     # ______________________________
 
     def test_user_permissions(self):
-        u = User()
-        u.save_user(email='frida@nowhere.com', password='getout', role='user', username='Frida Zandberg')
+        u = User.save_user(email='frida@nowhere.com', password='getout', role='user', username='Frida Zandberg')
         assert u.can(Permission.FOLLOW)
         assert u.can(Permission.WRITE_ARTICLES)
         assert not u.can(Permission.MODERATE_COMMENTS)
+    # ______________________________
+
+    def test_user_not_found_and_aborted(self):
+        with pytest.raises(werkzeug.exceptions.NotFound):
+            User.get_by_field_or_404(name='email', value='nobody@nowhere.com')
     # ______________________________
 
     def test_anonymous_user(self):
