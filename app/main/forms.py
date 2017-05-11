@@ -56,10 +56,10 @@ class EditProfileAdminForm(FlaskForm):
     # _________________________________
 
     def validate_email(self, field):
-        if field.data != self.user.email and User().find_one_by_field(name='email', value=field.data):
+        if field.data != self.user.email and User.get_by_field(name='email', value=field.data):
             raise ValidationError('Email already registered.')
     # _________________________________
 
     def validate_username(self, field):
-        if field.data != self.user.username and User().query.filter_by(username=field.data).first():
+        if field.data != self.user.username and User.get_by_field(name='username', value=field.data):
             raise ValidationError('Username already in use.')
