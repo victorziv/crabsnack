@@ -83,6 +83,7 @@ def edit_profile():
         current_user.location = form.location.data
         current_user.about_me = form.about_me.data
         current_user.update_user({
+            'email': current_user.email,
             'username': current_user.username,
             'location': current_user.location,
             'about_me': current_user.about_me
