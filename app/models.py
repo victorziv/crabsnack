@@ -386,19 +386,21 @@ class User(UserMixin, BaseModel):
         return s.dumps({'id': self.id})
     # __________________________________
 
-    def update_last_seen(self):
-        self.last_seen = datetime.utcnow()
-        self.query.update(
-            update_key_name='email',
-            update_key_value=self.email,
-            update_params={'last_seen': self.last_seen})
+#     def update_last_seen(self):
+#         self.last_seen = datetime.utcnow()
+#         self.query.update(
+#             update_key_name='email',
+#             update_key_value=self.email,
+#             update_params={'last_seen': self.last_seen})
     # __________________________________
 
-    def update_user(self, params):
-        self.last_seen = datetime.utcnow()
-        self.query.update(
+    @classmethod
+    def update_user(cls, params):
+        params['last_seen'] = datetime.utcnow()
+
+        cls.query.update(
             update_key_name='email',
-            update_key_value=self.email,
+            update_key_value=params.pop('email'),
             update_params=params)
     # __________________________________
 

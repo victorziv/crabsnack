@@ -37,19 +37,19 @@ def edit_profile_admin(id):
     form = EditProfileAdminForm(user=user)
 
     if form.validate_on_submit():
-        user.email = form.email.data
-        user.username = form.username.data
-#         user.confirmed = form.confirmed.data
-        user.role = Role.query.get(form.role.data)
-        user.location = form.location.data
-        user.about_me = form.about_me.data
-        User.save_user(user)
+        userd = dict(
+            email=form.email.data,
+            username=form.username.data,
+            role=Role.get_by_field(name='name', value=form.role.data),
+            location=form.location.data,
+            about_me=form.about_me.data,
+        )
+        User.update_user(params=userd)
         flash('The profile has been updated.')
         return redirect(url_for('.user', username=user.username))
 
     form.email.data = user.email
     form.username.data = user.username
-#     form.confirmed.data = user.confirmed
     form.role.data = user.role
     form.location.data = user.location
     form.about_me.data = user.about_me
