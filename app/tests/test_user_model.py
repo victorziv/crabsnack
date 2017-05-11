@@ -1,4 +1,3 @@
-import time
 import pytest  # noqa
 from app import create_app
 from app.models import Role, User, AnonymousUser, Permission
