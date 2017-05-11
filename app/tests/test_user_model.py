@@ -14,8 +14,7 @@ class TestUserModel:
         cls.app_context.push()
         cls.app.db.create_tables()
         cls.password = 'mucho'
-        role = Role()
-        role.insert_roles()
+        Role.insert_roles()
     # ______________________________
 
     @classmethod
@@ -27,12 +26,11 @@ class TestUserModel:
     def test_update_last_seen(self):
         u = User()
         u.save_user(email='victor_ziv@yahoo.com', password='1234', role='user', username='Bobo Mintz')
-        time.sleep(10)
         u.update_last_seen()
     # ____________________________________
 
     def test_role_queries_object(self):
-        role = Role()
+        role = Role(attrs={})
         assert hasattr(role, 'query')
         assert hasattr(role.query, 'db')
         assert hasattr(role.query.db, 'cur')

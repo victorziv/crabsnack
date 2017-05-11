@@ -87,7 +87,8 @@ class Role(BaseModel):
         self.__dict__.update(attrs)
     # ____________________________
 
-    def insert_roles(self):
+    @classmethod
+    def insert_roles(cls):
         """
         Create a new role only if not already in DB.
         Otherwise - update.
@@ -110,7 +111,7 @@ class Role(BaseModel):
         }
 
         for r in roles:
-            role = self.query.read_one_by_field(name=r)
+            role = cls.query.read_one_by_field(name=r)
             current_app.logger.debug("Role found: %r ", role)
             if role is None:
                 role = dict(
@@ -119,11 +120,11 @@ class Role(BaseModel):
                     isdefault=roles[r][1]
                 )
 
-                self.query.create(role)
+                cls.query.create(role)
             else:
                 role['permissions'] = roles[r][0],
                 role['isdefault'] = roles[r][1]
-                self.query.update(role)
+                cls.query.update(role)
 # ===========================
 
 
@@ -317,9 +318,9 @@ class User(UserMixin, BaseModel):
         # Set user role
         if role.lower() == 'admin':
             # user is an administrator
-            role = Role().get_by_field(name='permissions', value=0xFF)
+            role = Role().fetch_by_field(name='permissions', value=0xFF)
         else:
-            role = Role().get_by_field(name='name', value=role.lower())
+            role = Role().fetch_by_field(name='name', value=role.lower())
 
         print("Role: {}".format(role))
 
@@ -342,9 +343,9 @@ class User(UserMixin, BaseModel):
         # Set user role
         if role.lower() == 'admin':
             # user is an administrator
-            role = Role().get_by_field(name='permissions', value=0xFF)
+            role = Role.fetch_by_field(name='permissions', value=0xFF)
         else:
-            role = Role().get_by_field(name='name', value=role.lower())
+            role = Role.fetch_by_field(name='name', value=role.lower())
 
         password_hash = generate_password_hash(password)
         if username is None:
