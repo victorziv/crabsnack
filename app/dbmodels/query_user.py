@@ -1,4 +1,3 @@
-import inspect
 from psycopg2 import DatabaseError, ProgrammingError, IntegrityError
 from psycopg2.extensions import AsIs
 
@@ -11,13 +10,13 @@ class QueryUser(object):
     # ____________________________
 
     def read_one_by_field(self, **kwargs):
-        fname = inspect.currentframe().f_code.co_name
 
         if len(kwargs) != 1:
-            raise RuntimeError(
-                "%s accepts exactly one parameter for a field name" % fname)
+            raise RuntimeError("Accepts exactly one parameter for a field name")
 
         field = next(kwargs.__iter__())
+        print("====> FIELD: {}".format(field))
+        print("====> FIELD value: {}".format(kwargs[field]))
 
         query = """
             SELECT
@@ -25,6 +24,11 @@ class QueryUser(object):
                 u.email,
                 u.username,
                 u.password_hash,
+                u.location,
+                u.about_me,
+                u.member_since,
+                u.last_seen,
+                u.avatar_hash,
                 r.name AS role,
                 r.permissions
             FROM users AS u, roles AS r
@@ -49,6 +53,7 @@ class QueryUser(object):
             else:
                 raise
         else:
+            print('Fetch: {}'.format(fetch))
             return fetch
     # ____________________________
 
@@ -153,11 +158,15 @@ class QueryUser(object):
             DELETE FROM users
         """
         params = ()
-        try:
-            self.db.cur.execute(query, params)
-            self.db.conn.commit()
-        except DatabaseError as e:
-            print('ERROR: %s' % e)
-            self.db.conn.rollback()
-            return
+        self.db.cur.execute(query, params)
+        self.db.conn.commit()
+    # ____________________________
+
+    def update(self, update_key_name, update_key_value, update_params):
+        sql_template = "UPDATE users SET ({}) = %s WHERE {} = %s"
+        query = sql_template.format(', '.join(update_params.keys()), update_key_name)
+        params = (tuple(update_params.values()), update_key_value)
+        print(self.db.cur.mogrify(query, params))
+        self.db.cur.execute(query, params)
+        self.db.conn.commit()
     # ____________________________

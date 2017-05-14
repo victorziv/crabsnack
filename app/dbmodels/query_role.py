@@ -46,7 +46,21 @@ class QueryRole:
     # ____________________________
 
     def read(self, **kwargs):
-        raise RuntimeError("Not implemented")
+        query = """
+            SELECT
+                id,
+                name,
+                isdefault,
+                permissions
+            FROM roles
+        """
+        params = []
+        self.db.cur.execute(query, params)
+        fetch = self.db.cur.fetchall()
+        print("Fetch: {}".format(fetch))
+        ret = [dict(f) for f in fetch]
+        print("Return: {}".format(ret))
+        return ret
     # ____________________________
 
     def create(self, record):

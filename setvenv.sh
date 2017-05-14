@@ -7,6 +7,7 @@ VENVDIR=$CURDIR/venv-crab
 install_modules() {
     cd ${CURDIR}
     source ${VENVDIR}/bin/activate
+    cp ${CURDIR}/pip.conf ${VENVDIR}
     pip install -r ${CURDIR}/pip-requirements.txt
     deactivate
 

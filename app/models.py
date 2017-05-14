@@ -1,7 +1,8 @@
-from collections import namedtuple
+import hashlib
+from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import url_for
+from flask import url_for, abort, request
 from flask_login import UserMixin, AnonymousUserMixin
 from . import login_manager
 from flask import current_app
@@ -24,18 +25,37 @@ class Permission:
 
 class BaseModel(object):
 
-    def get_by_field(self, name, value):
+    @classmethod
+    def fetch_all(cls):
+        model_list = cls.query.read()
+        return [cls(attrs=m) for m in model_list]
+    # __________________________________
+
+    @classmethod
+    def get_by_field(cls, name, value):
         kwargs = {name: value}
-        modeld = self.query.read_one_by_field(**kwargs)
+        modeld = cls.query.read_one_by_field(**kwargs)
         if modeld is None:
             return
 
-        self.__dict__.update(dict(modeld))
-        return self
-    # ___________________________
+        model_instance = cls(attrs=dict(modeld))
+        return model_instance
+    # __________________________________
 
-    def clear_table(self):
-        self.query.remove_all_records()
+    @classmethod
+    def get_by_field_or_404(cls, name, value):
+        kwargs = {name: value}
+        modeld = cls.query.read_one_by_field(**kwargs)
+        if modeld is None:
+            abort(404)
+
+        model_instance = cls(attrs=dict(modeld))
+        return model_instance
+    # __________________________________
+
+    @classmethod
+    def clear_table(cls):
+        cls.query.remove_all_records()
 # ===========================
 
 
@@ -61,14 +81,17 @@ class Role(BaseModel):
 
     """
     __tablename__ = 'roles'
+    query = QueryRole(db)
 
     # ____________________________
 
-    def __init__(self):
+    def __init__(self, attrs):
         self.query = QueryRole(db)
+        self.__dict__.update(attrs)
     # ____________________________
 
-    def insert_roles(self):
+    @classmethod
+    def insert_roles(cls):
         """
         Create a new role only if not already in DB.
         Otherwise - update.
@@ -91,7 +114,7 @@ class Role(BaseModel):
         }
 
         for r in roles:
-            role = self.query.read_one_by_field(name=r)
+            role = cls.query.read_one_by_field(name=r)
             current_app.logger.debug("Role found: %r ", role)
             if role is None:
                 role = dict(
@@ -100,21 +123,15 @@ class Role(BaseModel):
                     isdefault=roles[r][1]
                 )
 
-                self.query.create(role)
+                cls.query.create(role)
             else:
                 role['permissions'] = roles[r][0],
                 role['isdefault'] = roles[r][1]
-                self.query.update(role)
+                cls.query.update(role)
 # ===========================
 
 
-Installation = namedtuple(
-    'Installation',
-    ['id', 'step', 'step_name']
-)
-
-
-class InstallationModel(BaseModel):
+class Installation(BaseModel):
     """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
@@ -212,13 +229,19 @@ class User(UserMixin, BaseModel):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     name = db.Column(db.String(64))
-    location = db.Column(db.String(64))
+    location  VARCHAR(64))
+    about_me TEXT,
+    member_since TIMESTAMP
+    last_seen TIMESTAMP
     """
+    query = QueryUser(db)
+
     # __________________________________
 
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+    def __init__(self, attrs={}):
+        self.__dict__.update(attrs)
         self.query = QueryUser(db)
+
     # __________________________________
 
     @classmethod
@@ -236,6 +259,23 @@ class User(UserMixin, BaseModel):
             cls().set_user_attributes(user_dict)
             for user_dict in user_dicts
         ]
+    # ____________________________
+
+    def gravatar(self, size=100, default='identicon', rating='g'):
+
+        if request.is_secure:
+            url = 'https://secure.gravatar.com/avatar'
+        else:
+            url = 'http://www.gravatar.com/avatar'
+
+        current_app.logger.info("Avatar hash: {}".format(self.avatar_hash))
+        print("Avatar hash: {}".format(self.avatar_hash))
+        if self.avatar_hash is None:
+            self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
+            User.update_user(params={'email': self.email, 'avatar_hash': self.avatar_hash})
+
+        return '{url}/{checksum}?s={size}&d={default}&r={rating}'.format(
+            url=url, checksum=self.avatar_hash, size=size, default=default, rating=rating)
     # ____________________________
 
     def to_json(self):
@@ -260,12 +300,12 @@ class User(UserMixin, BaseModel):
             bool : True or False
 
         """
-        current_app.logger.info("Current role: %r", self.role)
+        current_app.logger.info("User {} role: {}".format(self.email, self.role))
         return self.role is not None and (
             self.permissions & permissions) == permissions
     # __________________________________
 
-    def is_admin(self):
+    def is_administrator(self):
         return self.can(Permission.ADMINISTER)
     # __________________________________
 
@@ -292,7 +332,7 @@ class User(UserMixin, BaseModel):
         ]
 
         for u in users:
-            User().save_user(**u)
+            User.save_user(**u)
 
     # __________________________________
 
@@ -301,11 +341,11 @@ class User(UserMixin, BaseModel):
         # Set user role
         if role.lower() == 'admin':
             # user is an administrator
-            role = Role().get_by_field(name='permissions', value=0xFF)
+            role = Role.get_by_field(name='permissions', value=0xFF)
         else:
-            role = Role().get_by_field(name='name', value=role.lower())
+            role = Role.get_by_field(name='name', value=role.lower())
 
-        print("Role: {}".format(role))
+        current_app.logger.info(("Role: {}".format(role)))
 
         new_user_id = self.query.create_oauth(
             email=email,
@@ -314,37 +354,37 @@ class User(UserMixin, BaseModel):
             role_id=role.id
         )
 
-        print("New user ID: %r" % new_user_id)
         current_app.logger.info("New user ID: %r", new_user_id)
-
-        user = self.get_by_field(name='id', value=new_user_id)
+        user = User.get_by_field(name='id', value=new_user_id)
         return user
     # ____________________________
 
-    def save_user(self, email, password, role='user', username=None):
+    @classmethod
+    def save_user(cls, email, password, role='user', username=None):
 
         # Set user role
         if role.lower() == 'admin':
             # user is an administrator
-            role = Role().get_by_field(name='permissions', value=0xFF)
+            role = Role.get_by_field(name='permissions', value=0xFF)
         else:
-            role = Role().get_by_field(name='name', value=role.lower())
+            role = Role.get_by_field(name='name', value=role.lower())
 
         password_hash = generate_password_hash(password)
         if username is None:
             username = email
 
-        new_user_id = self.query.create(
+        avatar_hash = hashlib.md5(email.encode('utf-8')).hexdigest()
+
+        new_user_id = cls.query.create(
             email=email,
             username=username,
             password_hash=password_hash,
+            avatar_hash=avatar_hash,
             role_id=role.id
         )
 
-        print("New user ID: %r" % new_user_id)
         current_app.logger.info("New user ID: %r", new_user_id)
-
-        return self.get_by_field(name='id', value=new_user_id)
+        return cls.get_by_field(name='id', value=new_user_id)
     # ____________________________
 
     def exists_by_username(self, username):
@@ -366,8 +406,25 @@ class User(UserMixin, BaseModel):
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
+    # __________________________________
 
-    # ____________________________
+#     def update_last_seen(self):
+#         self.last_seen = datetime.utcnow()
+#         self.query.update(
+#             update_key_name='email',
+#             update_key_value=self.email,
+#             update_params={'last_seen': self.last_seen})
+    # __________________________________
+
+    @classmethod
+    def update_user(cls, params):
+        params['last_seen'] = datetime.utcnow()
+
+        cls.query.update(
+            update_key_name='email',
+            update_key_value=params.pop('email'),
+            update_params=params)
+    # __________________________________
 
     @staticmethod
     def verify_auth_token(token):
@@ -377,7 +434,7 @@ class User(UserMixin, BaseModel):
         except:
             return None
 
-        return User().get_by_field(name='id', value=data['id'])
+        return User.get_by_field(name='id', value=data['id'])
     # ____________________________
 
     def verify_password(self, password):
@@ -402,4 +459,4 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User().get_by_field(name='id', value=user_id)
+    return User.get_by_field(name='id', value=user_id)
