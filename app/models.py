@@ -268,6 +268,8 @@ class User(UserMixin, BaseModel):
         else:
             url = 'http://www.gravatar.com/avatar'
 
+        current_app.logger.info("Avatar hash: {}".format(self.avatar_hash))
+        print("Avatar hash: {}".format(self.avatar_hash))
         if self.avatar_hash is None:
             self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
             User.update_user(params={'email': self.email, 'avatar_hash': self.avatar_hash})
