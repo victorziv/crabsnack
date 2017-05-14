@@ -29,15 +29,15 @@ def create_index_postdate(conn):
 
 
 def upgrade(conn, **kwargs):
-    create_table_posts()
-    create_index_postdate()
+    create_table_posts(conn)
+    create_index_postdate(conn)
 
 # _______________________________
 
 
 def downgrade(conn, **kwargs):
-    drop_post_index()
-    drop_posts_table()
+    drop_post_index(conn)
+    drop_posts_table(conn)
 # _______________________________
 
 
