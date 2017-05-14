@@ -241,6 +241,7 @@ class User(UserMixin, BaseModel):
     def __init__(self, attrs={}):
         self.__dict__.update(attrs)
         self.query = QueryUser(db)
+
     # __________________________________
 
     @classmethod
@@ -267,10 +268,12 @@ class User(UserMixin, BaseModel):
         else:
             url = 'http://www.gravatar.com/avatar'
 
-        checksum = hashlib.md5(self.email.encode('utf-8')).hexdigest()
+        if self.avatar_hash is None:
+            self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
+            User.update_user(params={'email': self.email, 'avatar_hash': self.avatar_hash})
 
         return '{url}/{checksum}?s={size}&d={default}&r={rating}'.format(
-            url=url, checksum=checksum, size=size, default=default, rating=rating)
+            url=url, checksum=self.avatar_hash, size=size, default=default, rating=rating)
     # ____________________________
 
     def to_json(self):
@@ -368,10 +371,13 @@ class User(UserMixin, BaseModel):
         if username is None:
             username = email
 
+        avatar_hash = hashlib.md5(email.encode('utf-8')).hexdigest()
+
         new_user_id = cls.query.create(
             email=email,
             username=username,
             password_hash=password_hash,
+            avatar_hash=avatar_hash,
             role_id=role.id
         )
 

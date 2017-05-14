@@ -28,6 +28,7 @@ class QueryUser(object):
                 u.about_me,
                 u.member_since,
                 u.last_seen,
+                u.avatar_hash,
                 r.name AS role,
                 r.permissions
             FROM users AS u, roles AS r
