@@ -18,7 +18,7 @@ def add_column_authorid(conn):
 def drop_column_authorid(conn, **kwargs):
     query = """
         ALTER TABLE posts
-        DROP CONSTRAINT IF EXISTS authorid_fk CASCADE
+        DROP COLUMN IF EXISTS authorid CASCADE
     """
     params = ()
     cursor = conn.cursor()
