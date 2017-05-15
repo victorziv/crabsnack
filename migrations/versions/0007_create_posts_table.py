@@ -6,7 +6,7 @@ def create_table_posts(conn):
         CREATE TABLE IF NOT EXISTS posts (
             id serial PRIMARY KEY,
             body TEXT,
-            postdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            postdate TIMESTAMP WITHOUT TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
         );
     """
     params = ()
