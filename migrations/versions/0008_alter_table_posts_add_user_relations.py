@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 
-def alter_table_posts(conn, **kwargs):
+def add_column_authorid(conn):
     query = """
         ALTER TABLE posts
-        ADD COLUMN IF NOT EXISTS authorid INTEGER;
+        ADD COLUMN IF NOT EXISTS authorid INT,
+        ADD FOREIGN KEY (authorid) REFERENCES users (id) ON DELETE CASCADE
     """
     params = ()
     cursor = conn.cursor()
@@ -14,32 +15,10 @@ def alter_table_posts(conn, **kwargs):
 # _______________________________
 
 
-def alter_table_users(conn, **kwargs):
+def drop_column_authorid(conn, **kwargs):
     query = """
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS posts INTEGER;
-    """
-    params = ()
-    cursor = conn.cursor()
-    cursor.execute(query, params)
-    conn.commit()
-# _______________________________
-
-
-def drop_column_posts(conn, **kwargs):
-    query = """
-        ALTER TABLE posts DROP COLUMN IF EXISTS authorid;
-    """
-    params = ()
-    cursor = conn.cursor()
-    cursor.execute(query, params)
-    conn.commit()
-# _______________________________
-
-
-def drop_column_users(conn, **kwargs):
-    query = """
-        ALTER TABLE users DROP COLUMN IF EXISTS posts;
+        ALTER TABLE posts
+        DROP CONSTRAINT IF EXISTS authorid_fk CASCADE
     """
     params = ()
     cursor = conn.cursor()
@@ -49,11 +28,9 @@ def drop_column_users(conn, **kwargs):
 
 
 def upgrade(conn, **kwargs):
-    alter_table_posts()
-    alter_table_users()
+    add_column_authorid(conn)
 # _______________________________
 
 
 def downgrade(conn, **kwargs):
-    drop_column_posts(conn)
-    drop_column_users(conn)
+    drop_column_authorid(conn)
