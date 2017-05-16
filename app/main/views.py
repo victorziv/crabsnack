@@ -1,31 +1,45 @@
 from datetime import datetime
 from flask import (
     render_template,
-    session, redirect,
+    redirect,
     url_for, abort, flash,
 )
 from . import main
-from .forms import NameForm, EditProfileForm, EditProfileAdminForm
+from .forms import EditProfileForm, EditProfileAdminForm, PostForm
 from flask_login import login_required, current_user
-from ..models import Permission, User, Role
+from ..models import Permission, User, Role, Post
 from ..decorators import admin_required, permission_required
 # _______________________________
 
 
+# @main.route('/', methods=['GET', 'POST'])
+# def index():
+#     form = NameForm()
+
+#     if form.validate_on_submit():
+#         return redirect(url_for('.index'))
+
+#     return render_template(
+#         'index.html',
+#         form=form,
+#         name=session.get('name'),
+#         known=session.get('known', False),
+#         current_time=datetime.utcnow()
+#     )
+# _______________________________
+
+
+@main.route('/blog', methods=['GET', 'POST'])
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    form = NameForm()
-    if form.validate_on_submit():
-        # ...
+    form = PostForm()
+
+    if current_user.can(Permission.WRITE_ARTICLES) and form.validate_on_submit():
+        Post.save(body=form.body.data, author=current_user._get_current_object())
         return redirect(url_for('.index'))
 
-    return render_template(
-        'index.html',
-        form=form,
-        name=session.get('name'),
-        known=session.get('known', False),
-        current_time=datetime.utcnow()
-    )
+    posts = Post.get_all()
+    return render_template('index.html', form=form, posts=posts)
 # _______________________________
 
 

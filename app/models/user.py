@@ -81,7 +81,6 @@ class User(UserMixin, BaseModel):
             A list of User() objects - an object per fetched user.
 
         """
-        cls.set_query()
         user_dicts = cls.query.read()
         return [
             cls().set_user_attributes(user_dict)
