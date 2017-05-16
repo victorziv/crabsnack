@@ -1,6 +1,6 @@
 from flask import jsonify
 from app.api_1_0 import api
-from app.models import Installation
+from app.models.installation import Installation
 # ______________________________________
 
 
