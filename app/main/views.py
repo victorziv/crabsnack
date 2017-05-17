@@ -12,23 +12,6 @@ from ..decorators import admin_required, permission_required
 # _______________________________
 
 
-# @main.route('/', methods=['GET', 'POST'])
-# def index():
-#     form = NameForm()
-
-#     if form.validate_on_submit():
-#         return redirect(url_for('.index'))
-
-#     return render_template(
-#         'index.html',
-#         form=form,
-#         name=session.get('name'),
-#         known=session.get('known', False),
-#         current_time=datetime.utcnow()
-#     )
-# _______________________________
-
-
 @main.route('/blog', methods=['GET', 'POST'])
 @main.route('/', methods=['GET', 'POST'])
 def index():

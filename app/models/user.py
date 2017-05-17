@@ -159,7 +159,7 @@ class User(UserMixin, BaseModel):
         ]
 
         for u in users:
-            User.save_user(**u)
+            User.save(u)
 
     # __________________________________
 
@@ -178,7 +178,7 @@ class User(UserMixin, BaseModel):
             email=email,
             username=username,
             social_id=social_id,
-            role_id=role.id
+            role_id=str(role.id)
         )
 
         current_app.logger.info("New user ID: %r", new_user_id)
@@ -187,7 +187,11 @@ class User(UserMixin, BaseModel):
     # ____________________________
 
     @classmethod
-    def save_user(cls, email, password, role='user', username=None):
+    def save(cls, attrs):
+        role = attrs.pop('role', 'user')
+        password = attrs.pop('password')
+        email = attrs['email']
+        attrs['username'] = attrs.get('username', attrs['email'])
 
         # Set user role
         if role.lower() == 'admin':
@@ -196,19 +200,12 @@ class User(UserMixin, BaseModel):
         else:
             role = Role.get_by_field(name='name', value=role.lower())
 
-        password_hash = generate_password_hash(password)
-        if username is None:
-            username = email
+        attrs['role_id'] = str(role.id)
+        attrs['password_hash'] = generate_password_hash(password)
 
-        avatar_hash = hashlib.md5(email.encode('utf-8')).hexdigest()
+        attrs['avatar_hash'] = hashlib.md5(email.encode('utf-8')).hexdigest()
 
-        new_user_id = cls.query.create(
-            email=email,
-            username=username,
-            password_hash=password_hash,
-            avatar_hash=avatar_hash,
-            role_id=role.id
-        )
+        new_user_id = cls.query.create(attrs)
 
         current_app.logger.info("New user ID: %r", new_user_id)
         return cls.get_by_field(name='id', value=new_user_id)
@@ -235,18 +232,34 @@ class User(UserMixin, BaseModel):
         return s.dumps({'id': self.id})
     # __________________________________
 
-#     def update_last_seen(self):
-#         self.last_seen = datetime.utcnow()
-#         self.query.update(
-#             update_key_name='email',
-#             update_key_value=self.email,
-#             update_params={'last_seen': self.last_seen})
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed
+        import forgery_py
+        seed()
+
+        for i in range(count):
+            u = dict(
+                email=forgery_py.internet.email_address(),
+                username=forgery_py.name.full_name(),
+                password=forgery_py.lorem_ipsum.word(),
+                location=forgery_py.address.city(),
+                about_me=forgery_py.lorem_ipsum.sentence())
+#                 member_since=forgery_py.date.date(True))
+
+            User.save(u)
+    # __________________________________
+
+    def update_last_seen(self):
+        self.last_seen = datetime.utcnow()
+        self.query.update(
+            update_key_name='email',
+            update_key_value=self.email,
+            update_params={'last_seen': self.last_seen})
     # __________________________________
 
     @classmethod
     def update_user(cls, params):
-        params['last_seen'] = datetime.utcnow()
-
         cls.query.update(
             update_key_name='email',
             update_key_value=params.pop('email'),

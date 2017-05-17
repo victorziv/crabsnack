@@ -11,7 +11,7 @@ from .forms import LoginForm, RegistrationForm
 @auth.before_app_request
 def before_request():
     if current_user.is_authenticated:
-        User.update_user(params={'email': current_user.email})
+        current_user.update_last_seen()
 # __________________________________________
 
 

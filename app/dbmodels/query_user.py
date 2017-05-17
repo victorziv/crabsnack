@@ -85,38 +85,28 @@ class QueryUser(object):
         return fetch
     # ____________________________
 
-    def create(self, email, username, password_hash, role_id):
-        """
-        id = SERIAL primary_key=True)
-        email = String(64), unique=True, index=True
-        username String(64), unique=True, index=True
-        password = String(128), salted SHA1 hash
-        role_id = ObjectId, db.ForeignKey('roles.id'))
-        """
-
-        query = """
-            INSERT INTO users (email, username, password_hash, role_id)
-            VALUES (%s, %s, %s, %s)
+    def create(self, attrs):
+        query_template = """
+            INSERT INTO users ({})
+            VALUES ({})
             RETURNING id
         """
+        fields = ', '.join(attrs.keys())
+        print("Fields: {}".format(fields))
+        values_placeholders = ', '.join(['%s' for v in attrs.values()])
+        query = query_template.format(fields, values_placeholders)
+        print("query: {}".format(query))
+        print("values: {}".format(attrs.values()))
+        params = tuple(attrs.values())
 
-        params = (email, username, password_hash, role_id)
+        print(self.db.cur.mogrify(query, params))
 
-        try:
-            self.db.cur.execute(query, params)
-            self.db.conn.commit()
-            fetch = self.db.cur.fetchone()
-            print("XXXXX==> FETCH: {}".format(fetch))
-            return fetch['id']
+        self.db.cur.execute(query, params)
+        self.db.conn.commit()
+        fetch = self.db.cur.fetchone()
+        print("XXXXX==> FETCH: {}".format(fetch))
+        return fetch['id']
 
-        except IntegrityError as ie:
-            print('ERROR: %s' % ie)
-            self.db.conn.rollback()
-            return
-        except DatabaseError as dbe:
-            print('ERROR: %s' % dbe)
-            self.db.conn.rollback()
-            return
     # ____________________________
 
     def create_oauth(self, email, username, social_id, role_id):
