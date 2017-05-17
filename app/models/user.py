@@ -244,8 +244,8 @@ class User(UserMixin, BaseModel):
                 username=forgery_py.name.full_name(),
                 password=forgery_py.lorem_ipsum.word(),
                 location=forgery_py.address.city(),
-                about_me=forgery_py.lorem_ipsum.sentence())
-#                 member_since=forgery_py.date.date(True))
+                about_me=forgery_py.lorem_ipsum.sentence(),
+                member_since=forgery_py.date.date(True))
 
             User.save(u)
     # __________________________________
