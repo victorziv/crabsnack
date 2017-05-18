@@ -27,6 +27,26 @@ class Post(BaseModel):
         self.__dict__.update(attrs)
     # ____________________________
 
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed, randint
+        import forgery_py
+        seed()
+
+        user_count = User.query.read_total()
+        current_app.logger.debug("Total users: {}".format(user_count))
+
+        for i in range(user_count):
+            u = User.query.read_one_with_offset(offset=randint(0, user_count - 1))
+            p = {
+                'body': forgery_py.lorem_ipsum.sentences(randint(1, 3)),
+                'postdate': forgery_py.date.date(True),
+                'authorid': u['id']
+            }
+
+            Post.query.create(p)
+    # ____________________________
+
     @classmethod
     def get_all(cls, sort_by='postdate', sort_order='desc'):
         post_dicts = cls.query.read(sort_by, sort_order)
@@ -52,6 +72,6 @@ class Post(BaseModel):
 
     @classmethod
     def save(cls, body, author):
-        new_post_id = cls.query.create(body, author.id)
+        new_post_id = cls.query.create({'body': body, 'authorid': author.id})
         current_app.logger.info("New post ID: %r", new_post_id)
         return new_post_id

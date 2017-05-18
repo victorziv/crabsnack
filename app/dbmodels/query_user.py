@@ -1,4 +1,5 @@
-from psycopg2 import DatabaseError, ProgrammingError, IntegrityError
+from flask import current_app
+from psycopg2 import DatabaseError, IntegrityError
 from psycopg2.extensions import AsIs
 
 # ============================================
@@ -15,9 +16,6 @@ class QueryUser(object):
             raise RuntimeError("Accepts exactly one parameter for a field name")
 
         field = next(kwargs.__iter__())
-        print("====> FIELD: {}".format(field))
-        print("====> FIELD value: {}".format(kwargs[field]))
-
         query = """
             SELECT
                 u.id,
@@ -38,23 +36,39 @@ class QueryUser(object):
 
         params = (AsIs(field), kwargs[field])
 
-        try:
-            self.db.cur.execute(query, params)
+        self.db.cur.execute(query, params)
+        fetch = self.db.cur.fetchone()
+        return fetch
+    # ____________________________
 
-        except DatabaseError as e:
-            print('ERROR: %s' % e)
-            self.db.conn.rollback()
+    def read_one_with_offset(self, offset):
 
-        try:
-            fetch = self.db.cur.fetchone()
-        except ProgrammingError as pe:
-            if 'no results to fetch' in repr(pe):
-                return
-            else:
-                raise
-        else:
-            print('Fetch: {}'.format(fetch))
-            return fetch
+        query = """
+            SELECT
+                u.id,
+                u.email,
+                u.username,
+                u.password_hash,
+                u.location,
+                u.about_me,
+                u.member_since,
+                u.last_seen,
+                u.avatar_hash,
+                r.name AS role,
+                r.permissions
+            FROM users u, roles r
+            WHERE u.role_id = r.id
+            ORDER BY id ASC
+            LIMIT 1
+            OFFSET %s
+        """
+
+        params = (offset,)
+
+        self.db.cur.mogrify(query, params)
+        self.db.cur.execute(query, params)
+        fetch = self.db.cur.fetchone()
+        return fetch
     # ____________________________
 
     def read(self, **kwargs):
@@ -70,19 +84,20 @@ class QueryUser(object):
         """
         params = ()
 
-        try:
-            self.db.cur.execute(query, params)
-
-        except DatabaseError as e:
-            print('ERROR: %s' % e)
-            self.db.conn.rollback()
-
+        self.db.cur.execute(query, params)
         fetch = self.db.cur.fetchall()
-        if fetch is None:
-            return fetch
-
-        print("Read fetch: %r" % fetch)
         return fetch
+    # ____________________________
+
+    def read_total(self):
+        query = """
+            SELECT count(*) FROM users
+        """
+        params = ()
+
+        self.db.cur.execute(query, params)
+        fetch = self.db.cur.fetchone()
+        return fetch['count']
     # ____________________________
 
     def create(self, attrs):
@@ -95,8 +110,8 @@ class QueryUser(object):
         print("Fields: {}".format(fields))
         values_placeholders = ', '.join(['%s' for v in attrs.values()])
         query = query_template.format(fields, values_placeholders)
-        print("query: {}".format(query))
-        print("values: {}".format(attrs.values()))
+        current_app.logger.debug("query: {}".format(query))
+        current_app.logger.debug("values: {}".format(attrs.values()))
         params = tuple(attrs.values())
 
         print(self.db.cur.mogrify(query, params))

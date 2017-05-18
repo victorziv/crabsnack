@@ -33,17 +33,29 @@ class QueryPost(object):
         return fetch
     # ____________________________
 
-    def create(self, body, authorid):
+    def create(self, attrs):
         """
         """
 
-        query = """
-            INSERT INTO posts (body, authorid)
-            VALUES (%s, %s)
-            RETURNING id
-        """
+        body = attrs['body']
+        authorid = attrs['authorid']
+        postdate = attrs.get('postdate')
 
-        params = (body, authorid)
+        if postdate is not None:
+            query = """
+                INSERT INTO posts (body, postdate, authorid)
+                VALUES (%s, %s, %s)
+                RETURNING id
+            """
+            params = (body, postdate, authorid)
+        else:
+            query = """
+                INSERT INTO posts (body, authorid)
+                VALUES (%s, %s)
+                RETURNING id
+            """
+
+            params = (body, authorid)
 
         self.db.cur.execute(query, params)
         self.db.conn.commit()
