@@ -9,7 +9,7 @@ class QueryPost(object):
         self.db = db
     # ____________________________
 
-    def read(self, sort_by, sort_order):
+    def read(self, sort_by, sort_order, offset, limit):
         query = """
             SELECT
                 p.id,
@@ -21,8 +21,13 @@ class QueryPost(object):
             FROM posts AS p, users AS u
             WHERE p.authorid = u.id
             ORDER BY %s %s
+            OFFSET %s
         """
-        params = (AsIs(sort_by), AsIs(sort_order))
+        params = [AsIs(sort_by), AsIs(sort_order), AsIs(offset)]
+
+        if limit is not None:
+            query += 'LIMIT %s'
+            params.append(AsIs(limit))
 
         self.db.cur.execute(query, params)
         fetch = self.db.cur.fetchall()

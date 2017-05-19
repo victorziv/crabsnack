@@ -48,8 +48,8 @@ class Post(BaseModel):
     # ____________________________
 
     @classmethod
-    def get_all(cls, sort_by='postdate', sort_order='desc'):
-        post_dicts = cls.query.read(sort_by, sort_order)
+    def get_all(cls, sort_by='postdate', sort_order='desc', offset=0, limit=None):
+        post_dicts = cls.query.read(sort_by, sort_order, offset, limit)
         posts = []
         for d in post_dicts:
             d = dict(d)

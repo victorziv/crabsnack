@@ -2,11 +2,15 @@ from datetime import datetime
 from flask import (
     render_template,
     redirect,
-    url_for, abort, flash,
+    url_for,
+    abort,
+    flash,
+    request,
+    current_app
 )
+from flask_login import login_required, current_user
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm
-from flask_login import login_required, current_user
 from ..models import Permission, User, Role, Post
 from ..decorators import admin_required, permission_required
 # _______________________________
@@ -21,7 +25,11 @@ def index():
         Post.save(body=form.body.data, author=current_user._get_current_object())
         return redirect(url_for('.index'))
 
-    posts = Post.get_all()
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config['POSTS_PER_PAGE']
+
+    offset = (per_page * page) - per_page
+    posts = Post.get_all(offset=offset, limit=per_page)
     return render_template('index.html', form=form, posts=posts)
 # _______________________________
 
