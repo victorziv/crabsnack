@@ -26,7 +26,7 @@ def index():
         return redirect(url_for('.index'))
 
     page = request.args.get('page', 1, type=int)
-    per_page = current_app.config['POSTS_PER_PAGE']
+    per_page = request.args.get('page_size', current_app.config['POSTS_PER_PAGE'], type=int)
 
     offset = (per_page * page) - per_page
     posts = Post.get_all(offset=offset, limit=per_page)
