@@ -1,3 +1,5 @@
+from markdown import markdown
+import bleach
 from flask import current_app
 from app import db
 from .base import BaseModel
@@ -13,9 +15,10 @@ class Post(BaseModel):
     Columns:
     --------
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.Text)
+    body Text,
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     authorid = db.Column(db.Integer, db.ForeignKey('users.id'))
+    body_html Text
     """
 
     __tablename__ = 'posts'
@@ -67,11 +70,27 @@ class Post(BaseModel):
             posts.append(post)
 
         return posts
+    # ____________________________
 
+    @staticmethod
+    def generate_html_body(body):
+        allowed_tags = [
+            'a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+            'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+            'h1', 'h2', 'h3', 'p'
+        ]
+
+        body_html = bleach.linkify(bleach.clean(
+            markdown(body, output_format='html'),
+            tags=allowed_tags, strip=True))
+
+        return body_html
     # ____________________________
 
     @classmethod
     def save(cls, body, author):
-        new_post_id = cls.query.create({'body': body, 'authorid': author.id})
+        post = {'body': body, 'authorid': author.id}
+        post['body_html'] = Post.generate_html_body(body)
+        new_post_id = cls.query.create(post)
         current_app.logger.info("New post ID: %r", new_post_id)
         return new_post_id
