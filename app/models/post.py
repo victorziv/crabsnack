@@ -1,3 +1,4 @@
+from flask import abort
 from markdown import markdown
 import bleach
 from flask import current_app
@@ -31,6 +32,37 @@ class Post(BaseModel):
     # ____________________________
 
     @staticmethod
+    def compose_posts(post_dicts):
+        posts = []
+        for d in post_dicts:
+            d = dict(d)
+            post = Post()
+
+            user_attrs = {
+                'username': d.pop('username', d['email']),
+                'email': d.pop('email'),
+                'avatar_hash': d.pop('avatar_hash', '')
+            }
+            post.author = User(attrs=user_attrs)
+            post.__dict__.update(d)
+            posts.append(post)
+
+        return posts
+    # ____________________________
+
+    @classmethod
+    def get_by_field_or_404(cls, name, value):
+        """
+        TEMP. till base.get_by_field is fixed
+        """
+        dicts = cls.query.read_by_field(field_name=name, field_value=value)
+        if dicts is None:
+            abort(404)
+
+        return cls.compose_posts(dicts)
+    # __________________________________
+
+    @staticmethod
     def generate_fake(count=100):
         from random import seed, randint
         import forgery_py
@@ -53,23 +85,7 @@ class Post(BaseModel):
     @classmethod
     def get_all(cls, sort_by='postdate', sort_order='desc', offset=0, limit=None):
         post_dicts = cls.query.read(sort_by, sort_order, offset, limit)
-        posts = []
-        for d in post_dicts:
-            d = dict(d)
-            post = cls()
-            user_attrs = {
-                'username': d.pop('username', d['email']),
-                'email': d.pop('email'),
-                'avatar_hash': d.pop('avatar_hash', '')
-            }
-
-            print("USER ATTRS: {}".format(user_attrs))
-
-            post.author = User(attrs=user_attrs)
-            post.__dict__.update(d)
-            posts.append(post)
-
-        return posts
+        return cls.compose_posts(post_dicts)
     # ____________________________
 
     @staticmethod

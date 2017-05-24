@@ -39,6 +39,31 @@ class QueryPost(object):
         return fetch
     # ____________________________
 
+    def read_by_field(self, field_name, field_value):
+        query = """
+            SELECT
+                p.id,
+                p.body,
+                p.body_html,
+                p.postdate,
+                u.username,
+                u.email,
+                u.avatar_hash
+            FROM posts AS p, users AS u
+            WHERE p.authorid = u.id
+            AND p.%s = %s
+        """
+        params = (AsIs(field_name), field_value)
+
+        self.db.cur.execute(query, params)
+        fetch = self.db.cur.fetchall()
+        if fetch is None:
+            return fetch
+
+        current_app.logger.debug("Fetch: {}".format(fetch))
+        return fetch
+    # ____________________________
+
     def create(self, attrs):
         query_template = """
             INSERT INTO posts ({})

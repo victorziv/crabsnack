@@ -36,8 +36,8 @@ def index():
 
 @main.route('/post/<int:id>')
 def post_by_id(id):
-    post = Post.get_by_field_or_404(name='id', value=id)
-    return render_template('post.html', posts=[post])
+    posts = Post.get_by_field_or_404(name='id', value=id)
+    return render_template('post.html', posts=posts)
 # _______________________________
 
 
