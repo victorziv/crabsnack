@@ -16,6 +16,7 @@ class QueryPost(object):
                 p.body,
                 p.body_html,
                 p.postdate,
+                p.authorid,
                 u.username,
                 u.email,
                 u.avatar_hash
@@ -46,6 +47,7 @@ class QueryPost(object):
                 p.body,
                 p.body_html,
                 p.postdate,
+                p.authorid,
                 u.username,
                 u.email,
                 u.avatar_hash
@@ -100,7 +102,7 @@ class QueryPost(object):
     # ____________________________
 
     def update(self, update_key_name, update_key_value, update_params):
-        sql_template = "UPDATE users SET ({}) = %s WHERE {} = %s"
+        sql_template = "UPDATE posts SET ({}) = %s WHERE {} = %s"
         query = sql_template.format(', '.join(update_params.keys()), update_key_name)
         params = (tuple(update_params.values()), update_key_value)
         print(self.db.cur.mogrify(query, params))

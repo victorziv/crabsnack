@@ -36,9 +36,11 @@ class Post(BaseModel):
         posts = []
         for d in post_dicts:
             d = dict(d)
+            print("=======> Post dict: {}".format(d))
             post = Post()
 
             user_attrs = {
+                'id': d.pop('authorid'),
                 'username': d.pop('username', d['email']),
                 'email': d.pop('email'),
                 'avatar_hash': d.pop('avatar_hash', '')
@@ -110,3 +112,9 @@ class Post(BaseModel):
         new_post_id = cls.query.create(post)
         current_app.logger.info("New post ID: %r", new_post_id)
         return new_post_id
+    # ____________________________
+
+    @classmethod
+    def update(cls, postid, body):
+        post = {'body': body, 'body_html': Post.generate_html_body(body)}
+        cls.query.update(update_key_name='id', update_key_value=postid, update_params=post)

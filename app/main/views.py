@@ -112,19 +112,19 @@ def edit_profile():
 
 @main.route('/post/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-def edit(id):
-    post = Post.query.get_or_404(id)
-    if current_user != post.author and not current_user.can(Permission.ADMINISTER):
+def post_edit(id):
+    post = Post.get_by_field_or_404(name='id', value=id)[0]
+    print("Fetch post: {}".format(post.__dict__))
+    if current_user.email != post.author.email and not current_user.can(Permission.ADMINISTER):
         abort(403)
 
     form = PostForm()
     if form.validate_on_submit():
         post.body = form.body.data
-        db.session.add(post)
+        print("UUUUU Body to update: {}".format(post.body))
+        Post.update(body=post.body, postid=post.id)
         flash('The post has been updated.')
-        return redirect(url_for('post', id=post.id))
-    
+        return redirect(url_for('main.post_by_id', id=post.id))
+
     form.body.data = post.body
-    return render_template('edit_post.html', form=form)
-
-
+    return render_template('post_edit.html', form=form)
