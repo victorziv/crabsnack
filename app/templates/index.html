@@ -23,3 +23,8 @@
 
 {% include '_posts.html' %}
 {% endblock %}
+
+{% block external_script %}
+    {{ super() }}
+    {{ pagedown.include_pagedown() }}
+{% endblock %}
