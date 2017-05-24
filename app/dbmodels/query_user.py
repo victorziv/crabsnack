@@ -100,28 +100,53 @@ class QueryUser(object):
         return fetch['count']
     # ____________________________
 
+    def fetch_id_by_field(self, field_name, field_value):
+        query_template = """
+            SELECT id
+            FROM users
+            WHERE {} = %s
+        """
+
+        query = query_template.format(field_name)
+
+        params = (field_value,)
+        current_app.logger.debug(self.db.cur.mogrify(query, params))
+
+        self.db.cur.execute(query, params)
+        fetch = self.db.cur.fetchone()
+
+        return fetch['id']
+    # ____________________________
+
     def create(self, attrs):
+
         query_template = """
             INSERT INTO users ({})
             VALUES ({})
             RETURNING id
         """
         fields = ', '.join(attrs.keys())
-        print("Fields: {}".format(fields))
+        current_app.logger.debug("Fields: {}".format(fields))
         values_placeholders = ', '.join(['%s' for v in attrs.values()])
         query = query_template.format(fields, values_placeholders)
         current_app.logger.debug("query: {}".format(query))
         current_app.logger.debug("values: {}".format(attrs.values()))
         params = tuple(attrs.values())
 
-        print(self.db.cur.mogrify(query, params))
+        current_app.logger.debug(self.db.cur.mogrify(query, params))
 
-        self.db.cur.execute(query, params)
-        self.db.conn.commit()
-        fetch = self.db.cur.fetchone()
-        print("XXXXX==> FETCH: {}".format(fetch))
-        return fetch['id']
-
+        try:
+            self.db.cur.execute(query, params)
+            fetch = self.db.cur.fetchone()
+            current_app.logger.debug("FETCH: {}".format(fetch))
+            return fetch['id']
+        except IntegrityError:
+            self.db.conn.rollback()
+            return self.fetch_id_by_field('email', attrs['email'])
+        except Exception:
+            raise
+        else:
+            self.db.conn.commit()
     # ____________________________
 
     def create_oauth(self, email, username, social_id, role_id):

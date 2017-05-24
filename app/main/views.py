@@ -34,6 +34,13 @@ def index():
 # _______________________________
 
 
+@main.route('/post/<int:id>')
+def post_by_id(id):
+    post = Post.get_by_field_or_404(name='id', value=id)
+    return render_template('post.html', posts=[post])
+# _______________________________
+
+
 @main.route('/edit-profile/<int:id>', methods=['GET', 'POST'])
 @login_required
 @admin_required

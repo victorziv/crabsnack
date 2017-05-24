@@ -1,6 +1,7 @@
 from flask import abort
 # =========================================
 
+
 class Permission:
     FOLLOW = 0x01               # 0b00000001
     COMMENT = 0x02              # 0b00000010
