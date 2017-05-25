@@ -10,6 +10,7 @@ from app import db
 from app.dbmodels.query_user import QueryUser
 from .role import Role
 from .base import BaseModel, Permission
+from .follow import Follow
 # ===========================
 
 
@@ -51,16 +52,6 @@ class User(UserMixin, BaseModel):
     """
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), unique=True, index=True)
-    username = db.Column(db.String(64), unique=True, index=True)
-    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-    password_hash = db.Column(db.String(128))
-    name = db.Column(db.String(64))
-    location  VARCHAR(64))
-    about_me TEXT,
-    member_since TIMESTAMP
-    last_seen TIMESTAMP
     """
     query = QueryUser(db)
 
@@ -86,6 +77,12 @@ class User(UserMixin, BaseModel):
             cls().set_user_attributes(user_dict)
             for user_dict in user_dicts
         ]
+    # ____________________________
+
+    def follow(self, user):
+        if not self.is_following(user):
+            f = Follow(follower=self, followed=user)
+            Follow.save(f)
     # ____________________________
 
     def gravatar(self, size=100, default='identicon', rating='g'):

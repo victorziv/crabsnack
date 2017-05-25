@@ -32,7 +32,6 @@ class Role(BaseModel):
     # ____________________________
 
     def __init__(self, attrs):
-        self.query = QueryRole(db)
         self.__dict__.update(attrs)
     # ____________________________
 
