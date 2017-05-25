@@ -94,10 +94,8 @@ class DBAdmin(object):
 
     def already_applied(self, name):
 
-#         if name == 'baseline':
-#             return False
+        print("Checking if already applied check name: {}".format(name))
 
-        print("Check if already applied check name: {}".format(name))
         query = """
             SELECT EXISTS(
                 SELECT 1 FROM changelog WHERE name = %s
@@ -255,12 +253,12 @@ class DBAdmin(object):
             self.grant_access_to_table(table)
     # ____________________________
 
-    def create_baseline(self, conn):
-        version = '0000'
-        name = 'baseline'
-        module_name = 'migrations.versions.{}_{}'.format(version, name)
-        mod = importlib.import_module(module_name)
-        mod.upgrade(conn, version, name)
+#     def create_baseline(self, conn):
+#         version = '0000'
+#         name = 'baseline'
+#         module_name = 'migrations.versions.{}_{}'.format(version, name)
+#         mod = importlib.import_module(module_name)
+#         mod.upgrade(conn, version, name)
     # _____________________________
 
     def drop_all(self):
