@@ -73,6 +73,8 @@ class Config:
         }
     }
 
+    POSTS_PER_PAGE = 10
+
     # ___________________________________________
 
     @staticmethod

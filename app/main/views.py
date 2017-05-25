@@ -1,35 +1,47 @@
 from datetime import datetime
 from flask import (
     render_template,
-    session, redirect,
-    url_for, abort, flash,
+    redirect,
+    url_for,
+    abort,
+    flash,
+    request,
+    current_app
 )
-from . import main
-from .forms import NameForm, EditProfileForm, EditProfileAdminForm
 from flask_login import login_required, current_user
-from ..models import Permission, User, Role
+from . import main
+from .forms import EditProfileForm, EditProfileAdminForm, PostForm
+from ..models import Permission, User, Role, Post
 from ..decorators import admin_required, permission_required
 # _______________________________
 
 
+@main.route('/blog', methods=['GET', 'POST'])
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    form = NameForm()
-    if form.validate_on_submit():
-        # ...
+    form = PostForm()
+
+    if current_user.can(Permission.WRITE_ARTICLES) and form.validate_on_submit():
+        Post.save(body=form.body.data, author=current_user._get_current_object())
         return redirect(url_for('.index'))
 
-    return render_template(
-        'index.html',
-        form=form,
-        name=session.get('name'),
-        known=session.get('known', False),
-        current_time=datetime.utcnow()
-    )
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('page_size', current_app.config['POSTS_PER_PAGE'], type=int)
+
+    offset = (per_page * page) - per_page
+    posts = Post.get_all(offset=offset, limit=per_page)
+    return render_template('index.html', form=form, posts=posts)
 # _______________________________
 
 
-@main.route('/edit-profile/<int:id>', methods=['GET', 'POST'])
+@main.route('/post/<int:id>')
+def post_by_id(id):
+    posts = Post.get_by_field_or_404(name='id', value=id)
+    return render_template('post.html', posts=posts)
+# _______________________________
+
+
+@main.route('/profile/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_profile_admin(id):
@@ -95,3 +107,24 @@ def edit_profile():
     form.location.data = current_user.location
     form.about_me.data = current_user.about_me
     return render_template('edit_profile.html', form=form)
+# _________________________________________________
+
+
+@main.route('/post/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def post_edit(id):
+    post = Post.get_by_field_or_404(name='id', value=id)[0]
+    print("Fetch post: {}".format(post.__dict__))
+    if current_user.email != post.author.email and not current_user.can(Permission.ADMINISTER):
+        abort(403)
+
+    form = PostForm()
+    if form.validate_on_submit():
+        post.body = form.body.data
+        print("UUUUU Body to update: {}".format(post.body))
+        Post.update(body=post.body, postid=post.id)
+        flash('The post has been updated.')
+        return redirect(url_for('main.post_by_id', id=post.id))
+
+    form.body.data = post.body
+    return render_template('post_edit.html', form=form)

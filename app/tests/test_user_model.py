@@ -12,9 +12,7 @@ class TestUserModel:
         cls.app = create_app('testing')
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-        cls.app.db.create_tables()
         cls.password = 'mucho'
-        Role.insert_roles()
     # ______________________________
 
     @classmethod
@@ -24,7 +22,7 @@ class TestUserModel:
     # ______________________________
 
     def test_update_last_seen(self):
-        u = User.save_user(email='victor_ziv@yahoo.com', password='1234', role='user', username='Bobo Mintz')
+        u = User.save(attrs=dict(email='victor_ziv@yahoo.com', password='1234', role='user', username='Bobo Mintz'))
         u.update_last_seen()
     # ____________________________________
 
@@ -38,7 +36,7 @@ class TestUserModel:
     # ______________________________
 
     def test_user_permissions(self):
-        u = User.save_user(email='frida@nowhere.com', password='getout', role='user', username='Frida Zandberg')
+        u = User.save(attrs=dict(email='frida@nowhere.com', password='getout', role='user', username='Frida Zandberg'))
         assert u.can(Permission.FOLLOW)
         assert u.can(Permission.WRITE_ARTICLES)
         assert not u.can(Permission.MODERATE_COMMENTS)

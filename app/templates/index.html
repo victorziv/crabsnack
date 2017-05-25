@@ -1,24 +1,30 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}{{ config.PROJECT.capitalize() }}{% endblock %}
+{% block title %}Krabsnack{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
+
     <h1>Hello, 
         {% if current_user.is_authenticated %}
             {{ current_user.username }}
-        {% else %}Stranger
+        {% else %}
+            Stranger
         {% endif %}!
     </h1>
+
+</div>
+<div>
+    {% if current_user.can(Permission.WRITE_ARTICLES) %}
+        {{ wtf.quick_form(form) }}
+    {% endif %}
 </div>
 
-
-<div class="page-header">
-    <h1>IVT Dashboard</h1>
-</div>
-
+{% include '_posts.html' %}
 {% endblock %}
 
-{% block docready %}
-    jQuery("li#nav-home").addClass("active");
+{% block external_script %}
+    {{ super() }}
+    {{ pagedown.include_pagedown() }}
 {% endblock %}

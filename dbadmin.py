@@ -215,7 +215,8 @@ class DBAdmin(object):
                 location VARCHAR(64),
                 about_me TEXT,
                 member_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                avatar_hash VARCHAR(32)
             );
         """
         params = {}

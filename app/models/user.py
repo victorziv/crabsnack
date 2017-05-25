@@ -2,190 +2,18 @@ import hashlib
 from datetime import datetime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import url_for, abort, request
+from flask import url_for, request
 from flask_login import UserMixin, AnonymousUserMixin
-from . import login_manager
+from .. import login_manager
 from flask import current_app
 from app import db
-from app.dbmodels.query_role import QueryRole
 from app.dbmodels.query_user import QueryUser
-from app.dbmodels.query_installation import QueryInstallation
-# ===========================
-
-
-class Permission:
-    FOLLOW = 0x01               # 0b00000001
-    COMMENT = 0x02              # 0b00000010
-    WRITE_ARTICLES = 0x04       # 0b00000100
-    MODERATE_COMMENTS = 0x08    # 0b00001000
-    ADMINISTER = 0x80           # 0b10000000
-
-# ===========================
-
-
-class BaseModel(object):
-
-    @classmethod
-    def fetch_all(cls):
-        model_list = cls.query.read()
-        return [cls(attrs=m) for m in model_list]
-    # __________________________________
-
-    @classmethod
-    def get_by_field(cls, name, value):
-        kwargs = {name: value}
-        modeld = cls.query.read_one_by_field(**kwargs)
-        if modeld is None:
-            return
-
-        model_instance = cls(attrs=dict(modeld))
-        return model_instance
-    # __________________________________
-
-    @classmethod
-    def get_by_field_or_404(cls, name, value):
-        kwargs = {name: value}
-        modeld = cls.query.read_one_by_field(**kwargs)
-        if modeld is None:
-            abort(404)
-
-        model_instance = cls(attrs=dict(modeld))
-        return model_instance
-    # __________________________________
-
-    @classmethod
-    def clear_table(cls):
-        cls.query.remove_all_records()
-# ===========================
-
-
-class Role(BaseModel):
-
-    """
-
-    Columns:
-    --------
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    default = db.Column(db.Boolean, default=False, index=True)
-
-    # ____________________________
-
-    Roles permissions
-    -----------------
-    Anonymous       0b00000000 (0x00) # not-logged in - nothing allowed
-    ExternalUser    0b00000001 (0x01) # View reports only
-    User            0b00000111 (0x07) # View reports, run cases, write comments
-    Moderator       0b00001111 (0xf0) # Administer external users
-    Admin           0b11111111 (0xFF) # Administer all
-
-    """
-    __tablename__ = 'roles'
-    query = QueryRole(db)
-
-    # ____________________________
-
-    def __init__(self, attrs):
-        self.query = QueryRole(db)
-        self.__dict__.update(attrs)
-    # ____________________________
-
-    @classmethod
-    def insert_roles(cls):
-        """
-        Create a new role only if not already in DB.
-        Otherwise - update.
-        """
-        roles = {
-            'external_user': (
-                Permission.FOLLOW, False),
-
-            'user': (Permission.FOLLOW |
-                     Permission.COMMENT |
-                     Permission.WRITE_ARTICLES, True),
-
-            'moderator': (
-                Permission.FOLLOW |
-                Permission.COMMENT |
-                Permission.WRITE_ARTICLES |
-                Permission.MODERATE_COMMENTS, False),
-
-            'admin': (0xff, False)
-        }
-
-        for r in roles:
-            role = cls.query.read_one_by_field(name=r)
-            current_app.logger.debug("Role found: %r ", role)
-            if role is None:
-                role = dict(
-                    name=r,
-                    permissions=roles[r][0],
-                    isdefault=roles[r][1]
-                )
-
-                cls.query.create(role)
-            else:
-                role['permissions'] = roles[r][0],
-                role['isdefault'] = roles[r][1]
-                cls.query.update(role)
-# ===========================
-
-
-class Installation(BaseModel):
-    """
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    display_name = db.Column(db.String(64), unique=True)
-    """
-
-    def __repr__(self):
-        return '<InstallationStep %r>' % self.name
-    # ____________________________
-
-    def __init__(self):
-        self.query = QueryInstallation(db)
-    # ____________________________
-
-    def insert_steps(self):
-        steps = [
-            dict(step='hw_config', step_name='HW Config'),
-            dict(step='installation', step_name='Installation'),
-            dict(step='post_script', step_name='Post Installation Script'),
-            dict(step='hw_wizard', step_name='HW Wizard'),
-            dict(step='check_all', step_name='Check All'),
-            dict(step='direct_io', step_name='Direct IO'),
-            dict(step='fc_loopback', step_name='FC Loopback Test'),
-            dict(
-                step='internal_network',
-                step_name='Internal Network Test'
-            ),
-            dict(step='disable_fc_port', step_name='Disable FC Port'),
-            dict(step='mfg_suite', step_name='MFG Test Suite'),
-            dict(step='enable_fc_port', step_name='Enable FC Port'),
-            dict(step='check_all', step_name='Check All Test'),
-            dict(step='cleanup', step_name='Clean Up'),
-        ]
-
-        for ind, step in enumerate(steps):
-            step['priority'] = ind + 1
-            self.query.create(step)
-    # ____________________________
-
-    def get_all(self):
-        steps = self.query.read()
-
-        # read() returns a list of DictRow objects
-        # Casting to a list of dicts
-        steps_to_return = [dict(step) for step in steps]
-        current_app.logger.debug("Installation steps: %r", steps_to_return)
-        return steps_to_return
-
+from .role import Role
+from .base import BaseModel, Permission
 # ===========================
 
 
 class AnonymousUser(AnonymousUserMixin):
-
-    # ____________________________
 
     def can(self, permissions):
         """Fake permissions check for an anonymous user.
@@ -253,7 +81,6 @@ class User(UserMixin, BaseModel):
             A list of User() objects - an object per fetched user.
 
         """
-        cls.set_query()
         user_dicts = cls.query.read()
         return [
             cls().set_user_attributes(user_dict)
@@ -332,7 +159,7 @@ class User(UserMixin, BaseModel):
         ]
 
         for u in users:
-            User.save_user(**u)
+            User.save(u)
 
     # __________________________________
 
@@ -351,7 +178,7 @@ class User(UserMixin, BaseModel):
             email=email,
             username=username,
             social_id=social_id,
-            role_id=role.id
+            role_id=str(role.id)
         )
 
         current_app.logger.info("New user ID: %r", new_user_id)
@@ -360,7 +187,11 @@ class User(UserMixin, BaseModel):
     # ____________________________
 
     @classmethod
-    def save_user(cls, email, password, role='user', username=None):
+    def save(cls, attrs):
+        role = attrs.pop('role', 'user')
+        password = attrs.pop('password')
+        email = attrs['email']
+        attrs['username'] = attrs.get('username', attrs['email'])
 
         # Set user role
         if role.lower() == 'admin':
@@ -369,19 +200,12 @@ class User(UserMixin, BaseModel):
         else:
             role = Role.get_by_field(name='name', value=role.lower())
 
-        password_hash = generate_password_hash(password)
-        if username is None:
-            username = email
+        attrs['role_id'] = str(role.id)
+        attrs['password_hash'] = generate_password_hash(password)
 
-        avatar_hash = hashlib.md5(email.encode('utf-8')).hexdigest()
+        attrs['avatar_hash'] = hashlib.md5(email.encode('utf-8')).hexdigest()
 
-        new_user_id = cls.query.create(
-            email=email,
-            username=username,
-            password_hash=password_hash,
-            avatar_hash=avatar_hash,
-            role_id=role.id
-        )
+        new_user_id = cls.query.create(attrs)
 
         current_app.logger.info("New user ID: %r", new_user_id)
         return cls.get_by_field(name='id', value=new_user_id)
@@ -408,18 +232,34 @@ class User(UserMixin, BaseModel):
         return s.dumps({'id': self.id})
     # __________________________________
 
-#     def update_last_seen(self):
-#         self.last_seen = datetime.utcnow()
-#         self.query.update(
-#             update_key_name='email',
-#             update_key_value=self.email,
-#             update_params={'last_seen': self.last_seen})
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed
+        import forgery_py
+        seed()
+
+        for i in range(count):
+            u = dict(
+                email=forgery_py.internet.email_address(),
+                username=forgery_py.name.full_name(),
+                password=forgery_py.lorem_ipsum.word(),
+                location=forgery_py.address.city(),
+                about_me=forgery_py.lorem_ipsum.sentence(),
+                member_since=forgery_py.date.date(True))
+
+            User.save(u)
+    # __________________________________
+
+    def update_last_seen(self):
+        self.last_seen = datetime.utcnow()
+        self.query.update(
+            update_key_name='email',
+            update_key_value=self.email,
+            update_params={'last_seen': self.last_seen})
     # __________________________________
 
     @classmethod
     def update_user(cls, params):
-        params['last_seen'] = datetime.utcnow()
-
         cls.query.update(
             update_key_name='email',
             update_key_value=params.pop('email'),
