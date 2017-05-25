@@ -1,3 +1,4 @@
+import sys
 import os
 import datetime
 import glob
@@ -93,8 +94,8 @@ class DBAdmin(object):
 
     def already_applied(self, name):
 
-        if name == 'baseline':
-            return False
+#         if name == 'baseline':
+#             return False
 
         print("Check if already applied check name: {}".format(name))
         query = """
@@ -331,3 +332,16 @@ class DBAdmin(object):
         return versions
 
     # ___________________________
+
+    def prompt(self, question):
+        from distutils.util import strtobool
+
+        sys.stdout.write('{} [y/n]: '.format(question))
+        val = input()
+        try:
+            ret = strtobool(val)
+        except ValueError:
+            sys.stdout.write('Please answer with a y/n\n')
+            return self.prompt(question)
+
+        return ret

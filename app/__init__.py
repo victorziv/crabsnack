@@ -5,7 +5,7 @@ from flask_mail import Mail
 from flask_moment import Moment
 from flask_pagedown import PageDown
 from config import config
-from dbadmin import DBAdmin
+from app.dbmodels.query_admin import DBAdmin
 
 mail = Mail()
 moment = Moment()

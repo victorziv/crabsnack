@@ -5,7 +5,7 @@ from config import config
 from app import create_app, db
 from app import models
 from flask_script import Manager, Shell
-from flask_migrate import Migrate, MigrateCommand
+# from flask_migrate import Migrate, MigrateCommand
 
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
@@ -15,7 +15,7 @@ if os.environ.get('FLASK_COVERAGE'):
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
-migrate = Migrate(app, db)
+# migrate = Migrate(app, db)
 # ___________________________________________
 
 
@@ -28,31 +28,32 @@ def make_shell_context():
 
 manager.add_command("shell", Shell(
     make_context=make_shell_context, use_ipython=True))
-manager.add_command("db", MigrateCommand)
+
+# manager.add_command("db", MigrateCommand)
 # ___________________________________________
 
 
-def prompt(question):
-    from distutils.util import strtobool
+# def prompt(question):
+#     from distutils.util import strtobool
 
-    sys.stdout.write('{} [y/n]: '.format(question))
-    val = input()
-    try:
-        ret = strtobool(val)
-    except ValueError:
-        sys.stdout.write('Please answer with a y/n\n')
-        return prompt(question)
+#     sys.stdout.write('{} [y/n]: '.format(question))
+#     val = input()
+#     try:
+#         ret = strtobool(val)
+#     except ValueError:
+#         sys.stdout.write('Please answer with a y/n\n')
+#         return prompt(question)
 
-    return ret
+#     return ret
 # ___________________________________________
 
 
-def dbdrop(dba, conf, conn):
-    sure = prompt("You are about to drop {} DB. Sure?".format(conf.DBNAME))
-    if not sure:
-        sys.exit(1)
+# def dbdrop(dba, conf, conn):
+#     sure = prompt("You are about to drop {} DB. Sure?".format(conf.DBNAME))
+#     if not sure:
+#         sys.exit(1)
 
-    dba.dropdb(conn, conf.DBNAME)
+#     dba.dropdb(conn, conf.DBNAME)
 # ___________________________________________
 
 
@@ -64,43 +65,43 @@ def dbdrop(dba, conf, conn):
 # ___________________________________________
 
 
-@manager.option(
-    'action',
-    choices=['drop', 'create', 'reset'],
-    help="""
-        Actions:
-            drop - remove the DB for <configkey>
-            create - create a new DB for <cofigkey>
-            reset - re-create ( drop & create ) the DB
-    """
-)
-@manager.option(
-    'configkey',
-    choices=['testing', 'development', 'production'],
-    help="Configuration key: testing, develop or production"
-)
-def dbinit(configkey, action):
-    """
-    Creates, drops or re-creates(reset) a DB.
-    """
-    conf = config[configkey]
-    dba = DBAdmin(conf=conf)
-    conn = dba.connectdb(conf.DB_CONN_URI_ADMIN)
+# @manager.option(
+#     'action',
+#     choices=['drop', 'create', 'reset'],
+#     help="""
+#         Actions:
+#             drop - remove the DB for <configkey>
+#             create - create a new DB for <cofigkey>
+#             reset - re-create ( drop & create ) the DB
+#     """
+# )
+# @manager.option(
+#     'configkey',
+#     choices=['testing', 'development', 'production'],
+#     help="Configuration key: testing, develop or production"
+# )
+# def dbinit(configkey, action):
+#     """
+#     Creates, drops or re-creates(reset) a DB.
+#     """
+#     conf = config[configkey]
+#     dba = DBAdmin(conf=conf)
+#     conn = dba.connectdb(conf.DB_CONN_URI_ADMIN)
 
-    try:
-        if action == 'drop':
-            dba.dbdrop()
-        elif action == 'create':
-            dba.createdb()
-        elif action == 'reset':
-            dba.dbdrop()
-            dba.createdb(dba, conf, conn)
-        else:
-            print("ERROR: unsupported action {}".format(action))
-            sys.exit(1)
+#     try:
+#         if action == 'drop':
+#             dba.dbdrop()
+#         elif action == 'create':
+#             dba.createdb()
+#         elif action == 'reset':
+#             dba.dbdrop()
+#             dba.createdb(dba, conf, conn)
+#         else:
+#             print("ERROR: unsupported action {}".format(action))
+#             sys.exit(1)
 
-    finally:
-        conn.close()
+#     finally:
+#         conn.close()
 # ___________________________________________
 
 
