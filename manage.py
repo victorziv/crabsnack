@@ -1,6 +1,6 @@
 import sys
 import os
-from dbadmin import DBAdmin
+from app.dbmodels.query_admin import DBAdmin
 from config import config
 from app import create_app, db
 from app import models
@@ -56,11 +56,11 @@ def dbdrop(dba, conf, conn):
 # ___________________________________________
 
 
-def createdb(dba, conf, conn_admin):
-    print("===> CREATE DBNAME: {}".format(conf.DBNAME))
-    dba.createdb(conn_admin, conf.DBNAME, conf.DBUSER)
-    conn = dba.connectdb(conf.DB_CONN_URI)
-    dba.create_baseline(conn)
+# def createdb(dba, conf, conn_admin):
+#     print("===> CREATE DBNAME: {}".format(conf.DBNAME))
+#     dba.createdb(conn_admin, conf.DBNAME, conf.DBUSER)
+#     conn = dba.connectdb(conf.DB_CONN_URI)
+#     dba.create_baseline(conn)
 # ___________________________________________
 
 
@@ -83,18 +83,18 @@ def dbinit(configkey, action):
     """
     Creates, drops or re-creates(reset) a DB.
     """
-    dba = DBAdmin()
     conf = config[configkey]
+    dba = DBAdmin(conf=conf)
+    conn = dba.connectdb(conf.DB_CONN_URI_ADMIN)
 
     try:
-        conn = dba.connectdb(conf.DB_CONN_URI_ADMIN)
         if action == 'drop':
-            dbdrop(dba, conf, conn)
+            dba.dbdrop()
         elif action == 'create':
-            createdb(dba, conf, conn)
+            dba.createdb()
         elif action == 'reset':
-            dbdrop(dba, conf, conn)
-            createdb(dba, conf, conn)
+            dba.dbdrop()
+            dba.createdb(dba, conf, conn)
         else:
             print("ERROR: unsupported action {}".format(action))
             sys.exit(1)
@@ -147,9 +147,24 @@ def dbmigrate(configkey, action, version=None):
 # ___________________________________________
 
 
+def prepare_db(configkey):
+    reset_db(configkey)
+    dbmigrate(configkey, 'upgrade')
+# ___________________________________________
+
+
+def reset_db(configkey):
+    dbadmin = DBAdmin(conf=config[configkey])
+    dbadmin.dropdb()
+    dbadmin.cretedb()
+# ___________________________________________
+
+
 @manager.command
 def test(coverage=False):
     """Run the unittests"""
+
+    prepare_db('testing')
 
     if coverage and not os.environ.get('FLASK_COVERAGE'):
         import sys
