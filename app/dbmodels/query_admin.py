@@ -17,8 +17,7 @@ class DBAdmin(object):
         self.conf = conf
     # __________________________________________
 
-    @staticmethod
-    def createdb(conn, newdb, newdb_owner=None):
+    def createdb(self, newdb, newdb_owner=None):
         """
         Creates a new DB.
 
@@ -48,31 +47,23 @@ class DBAdmin(object):
         None
 
         """
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        cur = conn.cursor()
+        self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         try:
             query = """CREATE DATABASE %(dbname)s WITH OWNER %(user)s"""
             params = {'dbname': AsIs(newdb), 'user': AsIs(newdb_owner)}
-            cur.execute(query, params)
+            self.cursor.execute(query, params)
         except psycopg2.ProgrammingError as pe:
             if 'already exists' in repr(pe):
                 pass
             else:
                 raise
-        finally:
-            cur.close()
     # ___________________________________________
 
-    @staticmethod
-    def dropdb(conn, dbtodrop):
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        cur = conn.cursor()
-        try:
-            query = """DROP DATABASE IF EXISTS %(dbname)s"""
-            params = {'dbname': AsIs(dbtodrop)}
-            cur.execute(query, params)
-        finally:
-            cur.close()
+    def dropdb(self, dbtodrop):
+        self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        query = """DROP DATABASE IF EXISTS %(dbname)s"""
+        params = {'dbname': AsIs(dbtodrop)}
+        self.cursor.execute(query, params)
     # ___________________________
 
     @staticmethod

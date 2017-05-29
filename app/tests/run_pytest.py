@@ -1,25 +1,27 @@
+#!/usr/bin/env python
+
 import argparse
+from config import config
 from app.dbmodels.query_admin import DBAdmin
 # __________________________________
 
 
-def resetdb(conf):
-    dba = DBAdmin(conf=conf)
-    conn = dba.connectdb(conf.DB_CONN_URI_ADMIN)
+def resetdb(dba, db_to_reset, dbowner):
 
     try:
-        dba.dbdrop()
-        dba.createdb()
+        dba.dropdb(db_to_reset)
+        dba.createdb(db_to_reset, dbowner)
     finally:
-        conn.close()
+        dba.cursor.close()
+        dba.conn.close()
 # __________________________________
 
 
-def parse_args():
+def parseargs():
     d = "Trigger one or more unittests"
     parser = argparse.ArgumentParser(description=d)
     parser.add_argument(
-        '-t', '--type', dest='apptype', default='testing',
+        '-k', '--configkey', dest='configkey', default='testing',
         help="""Application type: testing, development, production. Default: testing""")
 
     return parser.parse_args()
@@ -27,5 +29,17 @@ def parse_args():
 
 
 def main():
-    opts = parse_args()
-    print(opts)
+    """
+    Example for literal string interpolation (f-string)
+    """
+    opts = parseargs()
+    print(f"Configuration key: {opts.configkey}")
+    conf = config[opts.configkey]
+    dba = DBAdmin(conf=conf)
+    dba.conn, dba.cursor = dba.connectdb(conf.DB_CONN_URI_ADMIN)
+    resetdb(dba, conf.DBNAME, conf.DBUSER)
+# __________________________________
+
+
+if __name__ == '__main__':
+    main()
