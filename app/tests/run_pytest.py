@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import pytest
 import argparse
 from config import config
 from app.dbmodels.query_admin import DBAdmin
@@ -16,9 +17,9 @@ def resetdb(dba, conf):
 # __________________________________
 
 
-def migratedb(dba, conf, version=None):
+def migratedb(conf, version=None):
+    dba = DBAdmin(conf=conf)
     resetdb(dba, conf)
-
     dba.conn, dba.cursor = dba.connectdb(conf.DB_CONN_URI)
     dba.create_table_changelog()
     dba.db_upgrade(version)
@@ -45,8 +46,8 @@ def main():
     opts = parseargs()
     print(f"Configuration key: {opts.configkey}")
     conf = config[opts.configkey]
-    dba = DBAdmin(conf=conf)
-    migratedb(dba, conf)
+    migratedb(conf)
+    pytest.main(['-x', 'tests'])
 # __________________________________
 
 

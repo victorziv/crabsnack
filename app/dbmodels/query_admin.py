@@ -244,14 +244,6 @@ class DBAdmin(object):
             self.grant_access_to_table(table)
     # ____________________________
 
-#     def create_baseline(self, conn):
-#         version = '0000'
-#         name = 'baseline'
-#         module_name = 'migrations.versions.{}_{}'.format(version, name)
-#         mod = importlib.import_module(module_name)
-#         mod.upgrade(conn, version, name)
-    # _____________________________
-
     def drop_all(self):
         for table in self.all_tables:
             self.drop_table(table)
