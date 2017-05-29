@@ -8,7 +8,7 @@ install_modules() {
     cd ${CURDIR}
     source ${VENVDIR}/bin/activate
     cp ${CURDIR}/pip.conf ${VENVDIR}
-    pip install -r ${CURDIR}/pip-requirements.txt
+    pip install -r ${CURDIR}/requirements.txt
     deactivate
 
 }
