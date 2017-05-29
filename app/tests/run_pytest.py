@@ -6,15 +6,18 @@ from app.dbmodels.query_admin import DBAdmin
 # __________________________________
 
 
-def resetdb(dba, db_to_reset, dbowner):
+def resetdb(dba, conf):
 
-    try:
-        dba.dropdb(db_to_reset)
-        dba.createdb(db_to_reset, dbowner)
-        dba.create_table_changelog()
-    finally:
-        dba.cursor.close()
-        dba.conn.close()
+    dba.conn, dba.cursor = dba.connectdb(conf.DB_CONN_URI_ADMIN)
+    dba.dropdb(conf.DBNAME)
+    dba.createdb(conf.DBNAME, conf.DBUSER)
+    dba.cursor.close()
+    dba.conn.close()
+
+    dba.conn, dba.cursor = dba.connectdb(conf.DB_CONN_URI)
+    dba.create_table_changelog()
+    dba.cursor.close()
+    dba.conn.close()
 # __________________________________
 
 
@@ -37,8 +40,7 @@ def main():
     print(f"Configuration key: {opts.configkey}")
     conf = config[opts.configkey]
     dba = DBAdmin(conf=conf)
-    dba.conn, dba.cursor = dba.connectdb(conf.DB_CONN_URI_ADMIN)
-    resetdb(dba, conf.DBNAME, conf.DBUSER)
+    resetdb(dba, conf)
 # __________________________________
 
 

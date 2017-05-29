@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 
 
-def create_table_changelog(conn):
-    cursor = conn.cursor()
+# def create_table_changelog(conn):
+#     cursor = conn.cursor()
 
-    query = """
-        CREATE TABLE IF NOT EXISTS changelog (
-            id serial PRIMARY KEY,
-            version VARCHAR(4),
-            name VARCHAR(100) UNIQUE,
-            applied TIMESTAMP
-        );
-    """
-    params = {}
+#     query = """
+#         CREATE TABLE IF NOT EXISTS changelog (
+#             id serial PRIMARY KEY,
+#             version VARCHAR(4),
+#             name VARCHAR(100) UNIQUE,
+#             applied TIMESTAMP
+#         );
+#     """
+#     params = {}
 
-    cursor.execute(query, params)
-    conn.commit()
+#     cursor.execute(query, params)
+#     conn.commit()
 # _____________________________
 
 
@@ -98,7 +98,7 @@ def drop_table_users(conn):
 
 
 def upgrade(conn, **kwargs):
-    create_table_changelog(conn)
+#     create_table_changelog(conn)
     create_table_roles(conn)
     create_table_users(conn)
 # _______________________________
