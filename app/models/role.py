@@ -1,5 +1,5 @@
 from flask import current_app
-from app import db
+from app import dba
 from .base import BaseModel, Permission
 from app.dbmodels.query_role import QueryRole
 # ===========================
@@ -8,15 +8,6 @@ from app.dbmodels.query_role import QueryRole
 class Role(BaseModel):
 
     """
-
-    Columns:
-    --------
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    default = db.Column(db.Boolean, default=False, index=True)
-
-    # ____________________________
-
     Roles permissions
     -----------------
     Anonymous       0b00000000 (0x00) # not-logged in - nothing allowed
@@ -27,7 +18,7 @@ class Role(BaseModel):
 
     """
     __tablename__ = 'roles'
-    query = QueryRole(db)
+    query = QueryRole(dba)
 
     # ____________________________
 

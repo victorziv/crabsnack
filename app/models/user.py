@@ -6,7 +6,7 @@ from flask import url_for, request
 from flask_login import UserMixin, AnonymousUserMixin
 from .. import login_manager
 from flask import current_app
-from app import db
+from app import dba
 from app.dbmodels.query_user import QueryUser
 from .role import Role
 from .base import BaseModel, Permission
@@ -53,13 +53,13 @@ class User(UserMixin, BaseModel):
     __tablename__ = 'users'
 
     """
-    query = QueryUser(db)
+    query = QueryUser(dba)
 
     # __________________________________
 
     def __init__(self, attrs={}):
         self.__dict__.update(attrs)
-        self.query = QueryUser(db)
+        self.query = QueryUser(dba)
 
     # __________________________________
 

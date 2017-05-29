@@ -1,4 +1,4 @@
-from app import db
+from app import dba
 from .base import BaseModel
 from app.dbmodels.query_follow import QueryFollow
 # ===========================
@@ -7,7 +7,7 @@ from app.dbmodels.query_follow import QueryFollow
 class Follow(BaseModel):
 
     __tablename__ = 'follow'
-    query = QueryFollow(db)
+    query = QueryFollow(dba)
 
     # ____________________________
 

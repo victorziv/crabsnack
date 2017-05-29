@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import pytest
 import argparse
 from config import config
@@ -47,7 +48,7 @@ def main():
     print(f"Configuration key: {opts.configkey}")
     conf = config[opts.configkey]
     migratedb(conf)
-    pytest.main(['-x', 'tests'])
+    pytest.main(['-x', os.path.join(conf.BASEDIR, 'app', 'tests')])
 # __________________________________
 
 
