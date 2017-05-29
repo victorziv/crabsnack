@@ -13,9 +13,15 @@ def resetdb(dba, conf):
     dba.createdb(conf.DBNAME, conf.DBUSER)
     dba.cursor.close()
     dba.conn.close()
+# __________________________________
+
+
+def migratedb(dba, conf, version=None):
+    resetdb(dba, conf)
 
     dba.conn, dba.cursor = dba.connectdb(conf.DB_CONN_URI)
     dba.create_table_changelog()
+    dba.db_upgrade(version)
     dba.cursor.close()
     dba.conn.close()
 # __________________________________
@@ -40,7 +46,7 @@ def main():
     print(f"Configuration key: {opts.configkey}")
     conf = config[opts.configkey]
     dba = DBAdmin(conf=conf)
-    resetdb(dba, conf)
+    migratedb(dba, conf)
 # __________________________________
 
 

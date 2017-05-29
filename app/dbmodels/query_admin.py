@@ -95,8 +95,8 @@ class DBAdmin(object):
         """
         params = (name,)
 
-        self.cur.execute(query, params)
-        fetch = self.cur.fetchone()
+        self.cursor.execute(query, params)
+        fetch = self.cursor.fetchone()
         print("Exists fetch: {}".format(fetch))
         return fetch[0]
 
@@ -140,7 +140,7 @@ class DBAdmin(object):
         """
         params = {}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 
@@ -181,14 +181,14 @@ class DBAdmin(object):
         """
         params = {'table': AsIs(table)}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
 
         # Create an index on priority column
         query = """ CREATE INDEX priority_ind ON %(table)s (priority); """
         params = {'table': AsIs(table)}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 
@@ -211,7 +211,7 @@ class DBAdmin(object):
         """
         params = {}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 
@@ -219,7 +219,7 @@ class DBAdmin(object):
         query = """GRANT ALL ON TABLE %(table)s TO %(user)s"""
         params = {'table': AsIs(table), 'user': AsIs('ivt')}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
 
     # ___________________________
@@ -228,7 +228,7 @@ class DBAdmin(object):
         print("DB: %r" % self.__dict__)
         print("Table to drop: %r" % table)
 
-        self.cur.execute("""
+        self.cursor.execute("""
             DROP TABLE IF EXISTS %s CASCADE
         """ % table)
 
@@ -258,10 +258,10 @@ class DBAdmin(object):
     # _____________________________
 
     def init_app(self, app):
-        self.conn, self.cur = DBAdmin.connectdb(app.config['DB_CONN_URI'])
+        self.conn, self.cursor = DBAdmin.connectdb(app.config['DB_CONN_URI'])
         app.db = self
         app.db.conn = self.conn
-        app.db.cur = self.cur
+        app.db.cur = self.cursor
         return app
     # _____________________________
 
@@ -291,9 +291,9 @@ class DBAdmin(object):
             """
             params = (version_number, name, datetime.datetime.utcnow())
 
-            self.cur.execute(query, params)
+            self.cursor.execute(query, params)
             self.conn.commit()
-            fetch = self.cur.fetchone()
+            fetch = self.cursor.fetchone()
             return fetch['id']
 
         except Exception as e:

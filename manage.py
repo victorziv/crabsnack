@@ -2,10 +2,9 @@ import sys
 import os
 from app.dbmodels.query_admin import DBAdmin
 from config import config
-from app import create_app, db
+from app import create_app, dba
 from app import models
 from flask_script import Manager, Shell
-# from flask_migrate import Migrate, MigrateCommand
 
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
@@ -15,13 +14,12 @@ if os.environ.get('FLASK_COVERAGE'):
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
-# migrate = Migrate(app, db)
 # ___________________________________________
 
 
 def make_shell_context():
     context = {}
-    context.update(dict(app=app, db=db, models=models))
+    context.update(dict(app=app, dba=dba, models=models))
     return context
 # ___________________________________________
 
@@ -52,7 +50,6 @@ manager.add_command("shell", Shell(
     choices=['testing', 'development', 'production'],
     help="Configuration key: testing, develop or production"
 )
-# def dbmigrate(configkey, action, version=None):
 def db(configkey, action, version=None):
     """
     Upgrades / downgrades DB up / down to some version.
