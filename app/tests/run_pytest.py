@@ -48,7 +48,7 @@ def main():
     print("Configuration key: {}".format(opts.configkey))
     conf = config[opts.configkey]
     migratedb(conf)
-    pytest.main(['-x', os.path.join(conf.BASEDIR, 'app', 'tests')])
+    pytest.main(['-x', os.path.join(conf.BASEDIR, 'app', 'tests', 'test_follow.py')])
 # __________________________________
 
 
