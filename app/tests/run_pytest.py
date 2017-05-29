@@ -11,6 +11,7 @@ def resetdb(dba, db_to_reset, dbowner):
     try:
         dba.dropdb(db_to_reset)
         dba.createdb(db_to_reset, dbowner)
+        dba.create_table_changelog()
     finally:
         dba.cursor.close()
         dba.conn.close()

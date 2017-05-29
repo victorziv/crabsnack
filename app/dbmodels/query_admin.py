@@ -156,7 +156,7 @@ class DBAdmin(object):
         """
         params = {}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 

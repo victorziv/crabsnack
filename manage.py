@@ -28,80 +28,6 @@ def make_shell_context():
 
 manager.add_command("shell", Shell(
     make_context=make_shell_context, use_ipython=True))
-
-# manager.add_command("db", MigrateCommand)
-# ___________________________________________
-
-
-# def prompt(question):
-#     from distutils.util import strtobool
-
-#     sys.stdout.write('{} [y/n]: '.format(question))
-#     val = input()
-#     try:
-#         ret = strtobool(val)
-#     except ValueError:
-#         sys.stdout.write('Please answer with a y/n\n')
-#         return prompt(question)
-
-#     return ret
-# ___________________________________________
-
-
-# def dbdrop(dba, conf, conn):
-#     sure = prompt("You are about to drop {} DB. Sure?".format(conf.DBNAME))
-#     if not sure:
-#         sys.exit(1)
-
-#     dba.dropdb(conn, conf.DBNAME)
-# ___________________________________________
-
-
-# def createdb(dba, conf, conn_admin):
-#     print("===> CREATE DBNAME: {}".format(conf.DBNAME))
-#     dba.createdb(conn_admin, conf.DBNAME, conf.DBUSER)
-#     conn = dba.connectdb(conf.DB_CONN_URI)
-#     dba.create_baseline(conn)
-# ___________________________________________
-
-
-# @manager.option(
-#     'action',
-#     choices=['drop', 'create', 'reset'],
-#     help="""
-#         Actions:
-#             drop - remove the DB for <configkey>
-#             create - create a new DB for <cofigkey>
-#             reset - re-create ( drop & create ) the DB
-#     """
-# )
-# @manager.option(
-#     'configkey',
-#     choices=['testing', 'development', 'production'],
-#     help="Configuration key: testing, develop or production"
-# )
-# def dbinit(configkey, action):
-#     """
-#     Creates, drops or re-creates(reset) a DB.
-#     """
-#     conf = config[configkey]
-#     dba = DBAdmin(conf=conf)
-#     conn = dba.connectdb(conf.DB_CONN_URI_ADMIN)
-
-#     try:
-#         if action == 'drop':
-#             dba.dbdrop()
-#         elif action == 'create':
-#             dba.createdb()
-#         elif action == 'reset':
-#             dba.dbdrop()
-#             dba.createdb(dba, conf, conn)
-#         else:
-#             print("ERROR: unsupported action {}".format(action))
-#             sys.exit(1)
-
-#     finally:
-#         conn.close()
 # ___________________________________________
 
 
@@ -126,7 +52,8 @@ manager.add_command("shell", Shell(
     choices=['testing', 'development', 'production'],
     help="Configuration key: testing, develop or production"
 )
-def dbmigrate(configkey, action, version=None):
+# def dbmigrate(configkey, action, version=None):
+def db(configkey, action, version=None):
     """
     Upgrades / downgrades DB up / down to some version.
     """
@@ -150,7 +77,8 @@ def dbmigrate(configkey, action, version=None):
 
 def prepare_db(configkey):
     reset_db(configkey)
-    dbmigrate(configkey, 'upgrade')
+    db(configkey, 'upgrade')
+#     dbmigrate(configkey, 'upgrade')
 # ___________________________________________
 
 
