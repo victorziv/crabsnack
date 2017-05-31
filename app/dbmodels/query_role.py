@@ -1,4 +1,3 @@
-from __future__ import print_function
 import inspect
 from psycopg2 import DatabaseError, ProgrammingError
 from psycopg2.extensions import AsIs
@@ -31,7 +30,7 @@ class QueryRole:
         params = (AsIs(field), kwargs[field])
 
         try:
-            self.db.cur.execute(query, params)
+            self.db.cursor.execute(query, params)
 
         except ProgrammingError as pe:
             print('ERROR: {}'.format(pe))
@@ -40,7 +39,7 @@ class QueryRole:
             print('ERROR: %s' % e)
             self.db.conn.rollback()
 
-        fetch = self.db.cur.fetchone()
+        fetch = self.db.cursor.fetchone()
         print("Fetch: {}".format(fetch))
         return fetch
     # ____________________________
@@ -55,8 +54,8 @@ class QueryRole:
             FROM roles
         """
         params = []
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchall()
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchall()
         print("Fetch: {}".format(fetch))
         ret = [dict(f) for f in fetch]
         print("Return: {}".format(ret))
@@ -79,9 +78,9 @@ class QueryRole:
         params = (record['name'], record['isdefault'], record['permissions'])
 
         try:
-            self.db.cur.execute(query, params)
+            self.db.cursor.execute(query, params)
             self.db.conn.commit()
-            fetch = self.db.cur.fetchone()
+            fetch = self.db.cursor.fetchone()
             return fetch['id']
         except DatabaseError as e:
             print('ERROR: %s' % e)
@@ -107,7 +106,7 @@ class QueryRole:
         params = (record['isdefault'], record['permissions'], record['name'])
 
         try:
-            self.db.cur.execute(query, params)
+            self.db.cursor.execute(query, params)
             self.db.conn.commit()
         except DatabaseError as e:
             print('ERROR: %s' % e)
