@@ -11,11 +11,6 @@ class Follow(BaseModel):
 
     # ____________________________
 
-    def __init__(self, follower, followed):
-        self.follower = follower
-        self.followed = followed
-    # ____________________________
-
     def save(self):
         attrs = dict(
             follower_id=self.follower.id,

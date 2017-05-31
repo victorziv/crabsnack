@@ -12,6 +12,11 @@ class Permission:
 
 
 class BaseModel:
+    # ____________________________
+
+    def __init__(self, attrs):
+        self.__dict__.update(attrs)
+    # ____________________________
 
     @classmethod
     def fetch_all(cls):

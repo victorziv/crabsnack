@@ -81,8 +81,12 @@ class User(UserMixin, BaseModel):
 
     def follow(self, user):
         if not self.is_following(user):
-            f = Follow(follower=self, followed=user)
+            f = Follow(attrs=dict(follower=self, followed=user))
             Follow.save(f)
+    # ____________________________
+
+    def is_following(self, user):
+        return Follow.get_by_field(name='followed_id', value=user.id) is not None
     # ____________________________
 
     def gravatar(self, size=100, default='identicon', rating='g'):
