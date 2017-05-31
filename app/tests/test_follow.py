@@ -1,5 +1,5 @@
 from app import create_app
-from app.models import User
+from app.models import User, Follow
 
 
 class TestFollow:
@@ -22,3 +22,17 @@ class TestFollow:
         u2 = User.save(attrs=dict(email='peppo@hereandnow.com', password='getin', role='user', username='Peppo Tocci'))
         u1.follow(u2)
         assert u1.is_following(u2)
+
+    # ______________________________
+
+    def test_unfollow(self):
+        u3 = User.save(attrs=dict(email='maryp@nowhere.com', password='getout', role='user', username='Mary Popper'))
+        u4 = User.save(attrs=dict(
+            email='kristyb@hereandnow.com',
+            password='getin',
+            role='user',
+            username='Kristy Balsamo'))
+        u4.follow(u3)
+        assert u4.is_following(u3)
+        u4.unfollow(u3)
+        assert Follow.get_by_field(name='followed_id', value=u3.id) is None

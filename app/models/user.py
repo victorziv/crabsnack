@@ -89,6 +89,12 @@ class User(UserMixin, BaseModel):
         return Follow.get_by_field(name='followed_id', value=user.id) is not None
     # ____________________________
 
+    def unfollow(self, user):
+        f = Follow.get_by_field(name='followed_id', value=user.id)
+        if f:
+            Follow.remove(f)
+    # ____________________________
+
     def gravatar(self, size=100, default='identicon', rating='g'):
 
         if request.is_secure:

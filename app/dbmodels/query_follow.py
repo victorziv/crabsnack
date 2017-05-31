@@ -47,3 +47,14 @@ class QueryFollow(object):
         cap.logger.debug("Fetch: {}".format(fetch))
         return fetch
     # ____________________________
+
+    def delete(self, follower_id, followed_id):
+        query = """
+            DELETE FROM follow
+            WHERE follower_id = %s
+            AND followed_id = %s
+        """
+        params = (follower_id, followed_id)
+
+        self.db.cursor.execute(query, params)
+        self.db.conn.commit()

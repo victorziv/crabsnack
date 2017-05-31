@@ -17,3 +17,8 @@ class Follow(BaseModel):
             followed_id=self.followed.id
         )
         self.query.create(attrs=attrs)
+    # ____________________________
+
+    @classmethod
+    def remove(cls, f):
+        return cls.query.delete(f.follower_id, f.followed_id)
