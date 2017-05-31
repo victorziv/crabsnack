@@ -22,8 +22,8 @@ class QueryFollow(object):
         current_app.logger.debug("values: {}".format(attrs.values()))
         params = tuple(attrs.values())
 
-        current_app.logger.debug(self.db.cur.mogrify(query, params))
+        current_app.logger.debug(self.db.cursor.mogrify(query, params))
 
-        self.db.cur.execute(query, params)
+        self.db.cursor.execute(query, params)
         self.db.conn.commit()
     # ____________________________

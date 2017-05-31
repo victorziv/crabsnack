@@ -31,8 +31,8 @@ class QueryPost(object):
             query += 'LIMIT %s'
             params.append(AsIs(limit))
 
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchall()
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchall()
         if fetch is None:
             return fetch
 
@@ -57,8 +57,8 @@ class QueryPost(object):
         """
         params = (AsIs(field_name), field_value)
 
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchall()
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchall()
         if fetch is None:
             return fetch
 
@@ -82,11 +82,11 @@ class QueryPost(object):
 
         params = tuple(attrs.values())
 
-        current_app.logger.debug(self.db.cur.mogrify(query, params))
+        current_app.logger.debug(self.db.cursor.mogrify(query, params))
 
-        self.db.cur.execute(query, params)
+        self.db.cursor.execute(query, params)
         self.db.conn.commit()
-        fetch = self.db.cur.fetchone()
+        fetch = self.db.cursor.fetchone()
         current_app.logger.debug("FETCH: {}".format(fetch))
         return fetch['id']
 
@@ -97,7 +97,7 @@ class QueryPost(object):
             DELETE FROM posts
         """
         params = ()
-        self.db.cur.execute(query, params)
+        self.db.cursor.execute(query, params)
         self.db.conn.commit()
     # ____________________________
 
@@ -105,7 +105,7 @@ class QueryPost(object):
         sql_template = "UPDATE posts SET ({}) = %s WHERE {} = %s"
         query = sql_template.format(', '.join(update_params.keys()), update_key_name)
         params = (tuple(update_params.values()), update_key_value)
-        print(self.db.cur.mogrify(query, params))
-        self.db.cur.execute(query, params)
+        print(self.db.cursor.mogrify(query, params))
+        self.db.cursor.execute(query, params)
         self.db.conn.commit()
     # ____________________________

@@ -253,7 +253,7 @@ class DBAdmin(object):
         self.conn, self.cursor = DBAdmin.connectdb(app.config['DB_CONN_URI'])
         app.db = self
         app.db.conn = self.conn
-        app.db.cur = self.cursor
+        app.db.cursor = self.cursor
         return app
     # _____________________________
 
@@ -262,7 +262,7 @@ class DBAdmin(object):
         migration_file = '0001.create_table-installationstep.sql'
         f = open(os.path.join(migrationdir, migration_file))
         try:
-            db.cur.execute(f.read())
+            db.cursor.execute(f.read())
             db.conn.commit()
         except Exception:
             db.conn.rollback()
