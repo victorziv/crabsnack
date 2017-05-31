@@ -18,6 +18,7 @@ class Role(BaseModel):
 
     """
     __tablename__ = 'roles'
+    print("NNNNNNNNNNNNN==>DBA: {}".format(dba.__dict__))
     query = QueryRole(dba)
 
     # ____________________________

@@ -4,6 +4,7 @@ import os
 import pytest
 import argparse
 from config import config
+from app import create_app
 from app.dbmodels.query_admin import DBAdmin
 # __________________________________
 
@@ -18,12 +19,24 @@ def resetdb(dba, conf):
 # __________________________________
 
 
+def insert_initial_data(conf):
+    app = create_app(conf.APPTYPE)
+    app_context = app.app_context()
+    app_context.push()
+    from app.models import Role
+    Role.insert_roles()
+# __________________________________
+
+
 def migratedb(conf, version=None):
     dba = DBAdmin(conf=conf)
     resetdb(dba, conf)
     dba.conn, dba.cursor = dba.connectdb(conf.DB_CONN_URI)
     dba.create_table_changelog()
     dba.db_upgrade(version)
+
+    insert_initial_data(conf)
+
     dba.cursor.close()
     dba.conn.close()
 # __________________________________
@@ -48,7 +61,7 @@ def main():
     print("Configuration key: {}".format(opts.configkey))
     conf = config[opts.configkey]
     migratedb(conf)
-    pytest.main(['-x', os.path.join(conf.BASEDIR, 'app', 'tests', 'test_follow.py')])
+    pytest.main(['-x', '-vv', '-s', os.path.join(conf.BASEDIR, 'app', 'tests', 'test_follow.py')])
 # __________________________________
 
 

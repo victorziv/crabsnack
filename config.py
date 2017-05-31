@@ -126,6 +126,7 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
+    APPTYPE = 'testing'
     TESTING = True
     SERVER_NAME = 'localhost'
     DBNAME = "%stest" % Config.PROJECT
