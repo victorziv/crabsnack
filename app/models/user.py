@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import url_for, request
 from flask_login import UserMixin, AnonymousUserMixin
 from .. import login_manager
-from flask import current_app
+from flask import current_app as cup
 from app import dba
 from app.dbmodels.query_user import QueryUser
 from .role import Role
@@ -95,6 +95,10 @@ class User(UserMixin, BaseModel):
             Follow.remove(f)
     # ____________________________
 
+    def is_followed_by(self, user):
+        return Follow.get_by_field(name='follower_id', value=user.id) is not None
+    # ____________________________
+
     def gravatar(self, size=100, default='identicon', rating='g'):
 
         if request.is_secure:
@@ -102,8 +106,7 @@ class User(UserMixin, BaseModel):
         else:
             url = 'http://www.gravatar.com/avatar'
 
-        current_app.logger.info("Avatar hash: {}".format(self.avatar_hash))
-        print("Avatar hash: {}".format(self.avatar_hash))
+        cup.logger.debug("Avatar hash: {}".format(self.avatar_hash))
         if self.avatar_hash is None:
             self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
             User.update_user(params={'email': self.email, 'avatar_hash': self.avatar_hash})
@@ -134,7 +137,7 @@ class User(UserMixin, BaseModel):
             bool : True or False
 
         """
-        current_app.logger.info("User {} role: {}".format(self.email, self.role))
+        cup.logger.info("User {} role: {}".format(self.email, self.role))
         return self.role is not None and (
             self.permissions & permissions) == permissions
     # __________________________________
@@ -179,7 +182,7 @@ class User(UserMixin, BaseModel):
         else:
             role = Role.get_by_field(name='name', value=role.lower())
 
-        current_app.logger.info(("Role: {}".format(role)))
+        cup.logger.info(("Role: {}".format(role)))
 
         new_user_id = self.query.create_oauth(
             email=email,
@@ -188,7 +191,7 @@ class User(UserMixin, BaseModel):
             role_id=str(role.id)
         )
 
-        current_app.logger.info("New user ID: %r", new_user_id)
+        cup.logger.info("New user ID: %r", new_user_id)
         user = User.get_by_field(name='id', value=new_user_id)
         return user
     # ____________________________
@@ -214,7 +217,7 @@ class User(UserMixin, BaseModel):
 
         new_user_id = cls.query.create(attrs)
 
-        current_app.logger.info("New user ID: %r", new_user_id)
+        cup.logger.info("New user ID: %r", new_user_id)
         return cls.get_by_field(name='id', value=new_user_id)
     # ____________________________
 
@@ -235,7 +238,7 @@ class User(UserMixin, BaseModel):
     # ____________________________
 
     def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+        s = Serializer(cup.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
     # __________________________________
 
@@ -275,7 +278,7 @@ class User(UserMixin, BaseModel):
 
     @staticmethod
     def verify_auth_token(token):
-        s = Serializer(current_app.config['SECRET_KEY'])
+        s = Serializer(cup.config['SECRET_KEY'])
         try:
             data = s.loads(token)
         except:
