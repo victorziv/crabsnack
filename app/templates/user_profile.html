@@ -34,6 +34,16 @@
                 Member since {{ moment(user.member_since).format('L') }}.
                 Last seen {{ moment(user.last_seen).fromNow(refresh=True) }}.
             </p>
+
+            {% if current_user.can(Permission.FOLLOW) and user != current_user %}
+
+                {% if not current_user.is_following(user) %}
+                    <a href="{{ url_for('.follow', username=user.username) }}" class="btn btn-primary">Follow</a>
+                {% else %}
+                    <a href="{{ url_for('.unfollow', username=user.username) }}" class="btn btn-default">Unfollow</a>
+                {% endif %}
+            {% endif %}
+
             <p>
                 {% if user == current_user %}
                     <a class="btn btn-default" href="{{ url_for('.edit_profile') }}">Edit Profile</a>
