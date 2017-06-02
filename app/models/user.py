@@ -79,6 +79,20 @@ class User(UserMixin, BaseModel):
         ]
     # ____________________________
 
+    def get_followers(self, limit=None, offset=None):
+
+        followers_dicts = self.query.read(
+            followed_id=self.id,
+            offset=offset,
+            limit=limit
+        )
+
+        followers = [User(attrs) for attrs in followers_dicts]
+
+        return followers
+
+    # ____________________________
+
     def follow(self, user):
         if not self.is_following(user):
             f = Follow(attrs=dict(follower=self, followed=user))
