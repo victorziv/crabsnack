@@ -74,6 +74,7 @@ class Config:
     }
 
     POSTS_PER_PAGE = 10
+    FOLLOWERS_PER_PAGE = 10
 
     # ___________________________________________
 
