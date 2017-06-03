@@ -100,7 +100,12 @@ class User(UserMixin, BaseModel):
     # ____________________________
 
     def is_following(self, user):
-        return Follow.get_by_field(name='followed_id', value=user.id) is not None
+        is_following = Follow.query.read_by_fields([
+            dict(name='followed_id', value=user.id),
+            dict(name='follower_id', value=self.id)
+        ])
+
+        return is_following
     # ____________________________
 
     def is_followed_by(self, user):
