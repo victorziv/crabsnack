@@ -42,7 +42,24 @@ class QueryUser(object):
         return fetch
     # ____________________________
 
-    def read_followers_count(self, followed_id):
+    def read_follow_count(self, follower_id):
+
+        query = """
+            SELECT COUNT(*) AS count
+            FROM follow
+            WHERE follower_id = %s
+        """
+
+        params = (follower_id,)
+
+        self.db.cursor.execute(query, params)
+        cap.logger.debug("Query: {}".format(self.db.cursor.mogrify(query, params)))
+        fetch = self.db.cursor.fetchone()
+        cap.logger.debug("Fetch: {}".format(fetch))
+        return int(fetch['count'])
+    # ____________________________
+
+    def read_followed_count(self, followed_id):
 
         query = """
             SELECT COUNT(*) AS count

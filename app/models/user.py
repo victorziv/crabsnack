@@ -109,7 +109,12 @@ class User(UserMixin, BaseModel):
     # ____________________________
 
     def is_followed_by(self, user):
-        return Follow.get_by_field(name='follower_id', value=user.id) is not None
+        is_followed_by = Follow.query.read_by_fields([
+            dict(name='followed_id', value=self.id),
+            dict(name='follower_id', value=user.id)
+        ])
+
+        return is_followed_by
     # ____________________________
 
     def gravatar(self, size=100, default='identicon', rating='g'):
@@ -203,15 +208,26 @@ class User(UserMixin, BaseModel):
     # __________________________________
 
     @property
-    def followers_count(self):
-        count = self.query.read_followers_count(self.id)
+    def following_count(self):
+        count = self.query.read_following_count(self.id)
         return count
     # __________________________________
 
-    @followers_count.setter
-    def followers_count(self, value):
-        raise ValueError("Setting followers count is not allowed")
+    @following_count.setter
+    def following_count(self, value):
+        raise ValueError("Setting following count is not allowed")
 
+    # __________________________________
+
+    @property
+    def followed_by_count(self):
+        count = self.query.read_followed_by_count(self.id)
+        return count
+    # __________________________________
+
+    @followed_by_count.setter
+    def followed_by_count(self, value):
+        raise ValueError("Setting followed by count is not allowed")
     # __________________________________
 
     def generate_auth_token(self, expiration):

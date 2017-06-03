@@ -44,12 +44,12 @@
                 {% endif %}
             {% endif %}
 
-            <a href="{{ url_for('.followers_for', email=user.email) }}">
-                Followers: <span class="badge">{{ user.followers_count }}</span>
+            <a href="{{ url_for('.followed_by', email=user.email) }}">
+                Followers: <span class="badge">{{ user.followed_by_count }}</span>
             </a>
 
-            <a href="{{ url_for('.followed_by', email=user.email) }}">
-                Following: <span class="badge">{{ user.followed_count }}</span>
+            <a href="{{ url_for('.follow', email=user.email) }}">
+                Following: <span class="badge">{{ user.follow_count }}</span>
             </a>
 
             {% if current_user.is_authenticated and user != current_user and user.is_following(current_user) %}

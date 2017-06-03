@@ -47,19 +47,34 @@ class TestFollow:
         assert Follow.get_by_field(name='followed_id', value=self.u3.id) is None
     # ______________________________
 
-    def test_follow_count_setter(self):
+    def test_following_count_setter(self):
         self.u6.follow(self.u5)
         assert self.u6.is_following(self.u5)
         with pytest.raises(ValueError):
-            self.u5.followers_count = 14
+            self.u6.following_count = 14
     # ______________________________
 
-    def test_follow_count_getter(self):
-        self.u1.follow(self.u5)
-        self.u2.follow(self.u5)
-        assert self.u1.is_following(self.u5)
-        assert self.u2.is_following(self.u5)
-        assert self.u5.followers_count == 2
+    def test_following_count_getter(self):
+        self.u1.follow(self.u2)
+        self.u1.follow(self.u3)
+        assert self.u1.is_following(self.u2)
+        assert self.u1.is_following(self.u3)
+        assert self.u1.following_count == 2
+    # ______________________________
+
+    def test_followed_by_count_setter(self):
+        self.u5.follow(self.u6)
+        assert self.u6.is_followed_by(self.u5)
+        with pytest.raises(ValueError):
+            self.u6.followed_by_count = 14
+    # ______________________________
+
+    def test_followed_by_count_getter(self):
+        self.u1.follow(self.u6)
+        self.u2.follow(self.u6)
+        assert self.u6.is_followed_by(self.u1)
+        assert self.u6.is_followed_by(self.u2)
+        assert self.u6.followed_by_count == 2
     # ______________________________
 
     def test_followed_user(self):

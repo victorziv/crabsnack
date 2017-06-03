@@ -133,25 +133,25 @@ def followed_by(email):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('page_size', current_app.config['FOLLOWERS_PER_PAGE'], type=int)
     offset = (per_page * page) - per_page
-    items = Follow.get_followers(follower_id=u.id, offset=offset, limit=per_page)
-    followed_by = [{'user': item.follower, 'started_following': item.started_following} for item in items]
-    return render_template('followers.html', user=u, title="Followed by", endpoint='.followers', follows=followed_by)
+    items = Follow.get_followed_by(followed_by_id=u.id, offset=offset, limit=per_page)
+    followed_by = [{'user': item.followed_by, 'started_following': item.started_following} for item in items]
+    return render_template('followers.html', user=u, title="Followed by", endpoint='.followed_by', follows=followed_by)
 # _______________________________
 
 
-@main.route('/followers_for/<email>')
-def followers_for(email):
+@main.route('/following/<email>')
+def following(email):
     u = User.get_by_field(name="email", value=email)
     if u is None:
         flash('Invalid user.')
         return redirect(url_for('.index'))
 
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('page_size', current_app.config['FOLLOWERS_PER_PAGE'], type=int)
+    per_page = request.args.get('page_size', current_app.config['FOLLOW_PER_PAGE'], type=int)
     offset = (per_page * page) - per_page
-    items = Follow.get_followers(followed_id=u.id, offset=offset, limit=per_page)
-    follows = [{'user': item.follower, 'started_following': item.started_following} for item in items]
-    return render_template('followers.html', user=u, title="Followers of", endpoint='.followers', follows=follows)
+    items = Follow.get_following(following=u.id, offset=offset, limit=per_page)
+    following = [{'user': item.following, 'started_following': item.started_following} for item in items]
+    return render_template('followers.html', user=u, title="Following", endpoint='.following', follows=following)
 # _______________________________
 
 
