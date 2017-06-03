@@ -29,6 +29,32 @@ class QueryFollow(object):
         self.db.conn.commit()
     # ____________________________
 
+    def read_by_fields(self, fields):
+
+        query = """
+            SELECT
+                follower_id,
+                followed_id,
+                started_following
+            FROM follow
+            WHERE %s = %s
+        """
+
+        if len(fields) > 1:
+            for f in fields[1:]:
+                query += " AND %s = %s"
+
+        params = []
+        for f in fields:
+            params.extend((AsIs(f['name']), f['value']))
+
+        self.db.cursor.execute(query, params)
+        print(self.db.cursor.mogrify(query, params))
+        fetch = self.db.cursor.fetchone()
+        cap.logger.debug("Fetch: {}".format(fetch))
+        return fetch
+    # ____________________________
+
     def read_one_by_field(self, **kwargs):
 
         field = next(iter(kwargs.keys()))

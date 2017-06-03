@@ -51,6 +51,10 @@ def parseargs():
         '-k', '--configkey', dest='configkey', default='testing',
         help="""Application type: testing, development, production. Default: testing""")
 
+    parser.add_argument(
+        '-t', '--testcase', dest='testcase', default='',
+        help="""A module or a testcase""")
+
     return parser.parse_args()
 # __________________________________
 
@@ -63,7 +67,9 @@ def main():
     print("Configuration key: {}".format(opts.configkey))
     conf = config[opts.configkey]
     migratedb(conf)
-    pytest.main(['-x', '-v', os.path.join(conf.BASEDIR, 'app', 'tests', 'test_follow.py')])
+    casepath = os.path.join(conf.BASEDIR, 'app', 'tests', opts.testcase)
+    pytest.main(['-x', '-v', casepath])
+
 # __________________________________
 
 
