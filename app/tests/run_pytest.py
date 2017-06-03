@@ -25,6 +25,8 @@ def insert_initial_data(conf):
     app_context.push()
     from app.models import Role
     Role.insert_roles()
+    from app.models import User
+    User.insert_initial_users()
 # __________________________________
 
 
@@ -61,7 +63,7 @@ def main():
     print("Configuration key: {}".format(opts.configkey))
     conf = config[opts.configkey]
     migratedb(conf)
-    pytest.main(['-x', '-vv', '-s', os.path.join(conf.BASEDIR, 'app', 'tests', 'test_follow.py')])
+    pytest.main(['-x', '-v', os.path.join(conf.BASEDIR, 'app', 'tests', 'test_follow.py')])
 # __________________________________
 
 

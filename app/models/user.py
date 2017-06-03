@@ -103,12 +103,6 @@ class User(UserMixin, BaseModel):
         return Follow.get_by_field(name='followed_id', value=user.id) is not None
     # ____________________________
 
-    def unfollow(self, user):
-        f = Follow.get_by_field(name='followed_id', value=user.id)
-        if f:
-            Follow.remove(f)
-    # ____________________________
-
     def is_followed_by(self, user):
         return Follow.get_by_field(name='follower_id', value=user.id) is not None
     # ____________________________
@@ -156,12 +150,28 @@ class User(UserMixin, BaseModel):
             self.permissions & permissions) == permissions
     # __________________________________
 
+    def exists_by_username(self, username):
+        userd = self.query.read_one_by_field(username=username)
+        if userd:
+            return True
+        else:
+            return False
+    # ____________________________
+
+    def exists_by_email(self, email):
+        userd = self.query.read_one_by_field(email=email)
+        if userd:
+            return True
+        else:
+            return False
+    # ____________________________
+
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
     # __________________________________
 
-    @staticmethod
-    def insert_initial_users():
+    @classmethod
+    def insert_initial_users(cls):
         users = [
             {
                 'email': 'victor_ziv@yahoo.com',
@@ -187,28 +197,40 @@ class User(UserMixin, BaseModel):
 
     # __________________________________
 
-    def save_user_oauth(self, email, username, social_id, role='user'):
+    @property
+    def followers_count(self):
+        count = self.query.get_followers_count(self.id)
+        return count
+    # __________________________________
 
-        # Set user role
-        if role.lower() == 'admin':
-            # user is an administrator
-            role = Role.get_by_field(name='permissions', value=0xFF)
-        else:
-            role = Role.get_by_field(name='name', value=role.lower())
+    @followers_count.setter
+    def followers_count(self, value):
+        raise ValueError("Setting followers count is not allowed")
 
-        cup.logger.info(("Role: {}".format(role)))
+    # __________________________________
 
-        new_user_id = self.query.create_oauth(
-            email=email,
-            username=username,
-            social_id=social_id,
-            role_id=str(role.id)
-        )
+    def generate_auth_token(self, expiration):
+        s = Serializer(cup.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
+    # __________________________________
 
-        cup.logger.info("New user ID: %r", new_user_id)
-        user = User.get_by_field(name='id', value=new_user_id)
-        return user
-    # ____________________________
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed
+        import forgery_py
+        seed()
+
+        for i in range(count):
+            u = dict(
+                email=forgery_py.internet.email_address(),
+                username=forgery_py.name.full_name(),
+                password=forgery_py.lorem_ipsum.word(),
+                location=forgery_py.address.city(),
+                about_me=forgery_py.lorem_ipsum.sentence(),
+                member_since=forgery_py.date.date(True))
+
+            User.save(u)
+    # __________________________________
 
     @classmethod
     def save(cls, attrs):
@@ -235,44 +257,28 @@ class User(UserMixin, BaseModel):
         return cls.get_by_field(name='id', value=new_user_id)
     # ____________________________
 
-    def exists_by_username(self, username):
-        userd = self.query.read_one_by_field(username=username)
-        if userd:
-            return True
+    def save_user_oauth(self, email, username, social_id, role='user'):
+
+        # Set user role
+        if role.lower() == 'admin':
+            # user is an administrator
+            role = Role.get_by_field(name='permissions', value=0xFF)
         else:
-            return False
+            role = Role.get_by_field(name='name', value=role.lower())
+
+        cup.logger.info(("Role: {}".format(role)))
+
+        new_user_id = self.query.create_oauth(
+            email=email,
+            username=username,
+            social_id=social_id,
+            role_id=str(role.id)
+        )
+
+        cup.logger.info("New user ID: %r", new_user_id)
+        user = User.get_by_field(name='id', value=new_user_id)
+        return user
     # ____________________________
-
-    def exists_by_email(self, email):
-        userd = self.query.read_one_by_field(email=email)
-        if userd:
-            return True
-        else:
-            return False
-    # ____________________________
-
-    def generate_auth_token(self, expiration):
-        s = Serializer(cup.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
-    # __________________________________
-
-    @staticmethod
-    def generate_fake(count=100):
-        from random import seed
-        import forgery_py
-        seed()
-
-        for i in range(count):
-            u = dict(
-                email=forgery_py.internet.email_address(),
-                username=forgery_py.name.full_name(),
-                password=forgery_py.lorem_ipsum.word(),
-                location=forgery_py.address.city(),
-                about_me=forgery_py.lorem_ipsum.sentence(),
-                member_since=forgery_py.date.date(True))
-
-            User.save(u)
-    # __________________________________
 
     def update_last_seen(self):
         self.last_seen = datetime.utcnow()
@@ -281,6 +287,12 @@ class User(UserMixin, BaseModel):
             update_key_value=self.email,
             update_params={'last_seen': self.last_seen})
     # __________________________________
+
+    def unfollow(self, user):
+        f = Follow.get_by_field(name='followed_id', value=user.id)
+        if f:
+            Follow.remove(f)
+    # ____________________________
 
     @classmethod
     def update_user(cls, params):
