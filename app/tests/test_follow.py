@@ -56,8 +56,10 @@ class TestFollow:
 
     def test_follow_count_getter(self):
         self.u1.follow(self.u5)
+        self.u2.follow(self.u5)
         assert self.u1.is_following(self.u5)
-#         assert self.u1.followers_count == 2
+        assert self.u2.is_following(self.u5)
+        assert self.u5.followers_count == 2
     # ______________________________
 
     def test_followed_user(self):

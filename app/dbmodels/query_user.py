@@ -1,4 +1,5 @@
 from flask import current_app
+from flask import current_app as cap
 from psycopg2 import DatabaseError, IntegrityError
 from psycopg2.extensions import AsIs
 
@@ -39,6 +40,23 @@ class QueryUser(object):
         self.db.cursor.execute(query, params)
         fetch = self.db.cursor.fetchone()
         return fetch
+    # ____________________________
+
+    def read_followers_count(self, followed_id):
+
+        query = """
+            SELECT COUNT(*) AS count
+            FROM follow
+            WHERE followed_id = %s
+        """
+
+        params = (followed_id,)
+
+        self.db.cursor.execute(query, params)
+        cap.logger.debug("Query: {}".format(self.db.cursor.mogrify(query, params)))
+        fetch = self.db.cursor.fetchone()
+        cap.logger.debug("Fetch: {}".format(fetch))
+        return int(fetch['count'])
     # ____________________________
 
     def read_one_with_offset(self, offset):

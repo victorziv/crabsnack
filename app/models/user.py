@@ -204,7 +204,7 @@ class User(UserMixin, BaseModel):
 
     @property
     def followers_count(self):
-        count = self.query.get_followers_count(self.id)
+        count = self.query.read_followers_count(self.id)
         return count
     # __________________________________
 
