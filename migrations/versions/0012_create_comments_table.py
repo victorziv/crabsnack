@@ -7,7 +7,7 @@ def create_table_comments(conn):
             id serial PRIMARY KEY,
             body TEXT,
             body_html TEXT,
-            commentdate TIMESTAMP WITHOUT TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
+            commentdate TIMESTAMP WITHOUT TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
             author_id INTEGER NOT NULL,
             post_id INTEGER NOT NULL,
             UNIQUE(author_id, post_id)
