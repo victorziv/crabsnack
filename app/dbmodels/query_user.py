@@ -42,15 +42,15 @@ class QueryUser(object):
         return fetch
     # ____________________________
 
-    def read_follow_count(self, follower_id):
+    def read_following_count(self, followed_by_id):
 
         query = """
             SELECT COUNT(*) AS count
             FROM follow
-            WHERE follower_id = %s
+            WHERE followed_by_id = %s
         """
 
-        params = (follower_id,)
+        params = (followed_by_id,)
 
         self.db.cursor.execute(query, params)
         cap.logger.debug("Query: {}".format(self.db.cursor.mogrify(query, params)))
@@ -59,15 +59,15 @@ class QueryUser(object):
         return int(fetch['count'])
     # ____________________________
 
-    def read_followed_count(self, followed_id):
+    def read_followed_by_count(self, following_id):
 
         query = """
             SELECT COUNT(*) AS count
             FROM follow
-            WHERE followed_id = %s
+            WHERE following_id = %s
         """
 
-        params = (followed_id,)
+        params = (following_id,)
 
         self.db.cursor.execute(query, params)
         cap.logger.debug("Query: {}".format(self.db.cursor.mogrify(query, params)))

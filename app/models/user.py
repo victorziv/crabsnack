@@ -95,14 +95,14 @@ class User(UserMixin, BaseModel):
 
     def follow(self, user):
         if not self.is_following(user):
-            f = Follow(attrs=dict(follower=self, followed=user))
+            f = Follow(attrs=dict(following=self, followed_by=user))
             Follow.save(f)
     # ____________________________
 
     def is_following(self, user):
         is_following = Follow.query.read_by_fields([
-            dict(name='followed_id', value=user.id),
-            dict(name='follower_id', value=self.id)
+            dict(name='followed_by_id', value=user.id),
+            dict(name='following_id', value=self.id)
         ])
 
         return is_following
@@ -110,8 +110,8 @@ class User(UserMixin, BaseModel):
 
     def is_followed_by(self, user):
         is_followed_by = Follow.query.read_by_fields([
-            dict(name='followed_id', value=self.id),
-            dict(name='follower_id', value=user.id)
+            dict(name='followed_by_id', value=self.id),
+            dict(name='following_id', value=user.id)
         ])
 
         return is_followed_by
@@ -209,7 +209,7 @@ class User(UserMixin, BaseModel):
 
     @property
     def following_count(self):
-        count = self.query.read_following_count(self.id)
+        count = self.query.read_followed_by_count(self.id)
         return count
     # __________________________________
 
@@ -221,7 +221,7 @@ class User(UserMixin, BaseModel):
 
     @property
     def followed_by_count(self):
-        count = self.query.read_followed_by_count(self.id)
+        count = self.query.read_following_count(self.id)
         return count
     # __________________________________
 
@@ -310,7 +310,7 @@ class User(UserMixin, BaseModel):
     # __________________________________
 
     def unfollow(self, user):
-        f = Follow.get_by_field(name='followed_id', value=user.id)
+        f = Follow.get_by_field(name='followed_by_id', value=user.id)
         if f:
             Follow.remove(f)
     # ____________________________

@@ -44,7 +44,7 @@ class TestFollow:
         self.u4.follow(self.u3)
         assert self.u4.is_following(self.u3)
         self.u4.unfollow(self.u3)
-        assert Follow.get_by_field(name='followed_id', value=self.u3.id) is None
+        assert Follow.get_by_field(name='followed_by_id', value=self.u3.id) is None
     # ______________________________
 
     def test_following_count_setter(self):
@@ -67,14 +67,16 @@ class TestFollow:
         assert self.u6.is_followed_by(self.u5)
         with pytest.raises(ValueError):
             self.u6.followed_by_count = 14
+        self.u5.unfollow(self.u6)
     # ______________________________
 
     def test_followed_by_count_getter(self):
         self.u1.follow(self.u6)
         self.u2.follow(self.u6)
+        self.u3.follow(self.u6)
         assert self.u6.is_followed_by(self.u1)
         assert self.u6.is_followed_by(self.u2)
-        assert self.u6.followed_by_count == 2
+        assert self.u6.followed_by_count == 3
     # ______________________________
 
     def test_followed_user(self):
@@ -89,11 +91,11 @@ class TestFollow:
     def test_is_following_by(self):
         print("Follower: {}".format(self.u1))
         print("Followed By: {}".format(self.u1))
-        follower = self.u1
+        following = self.u1
         followed_by = self.u2
         fields = [
-            {'name': 'follower_id', 'value': follower.id},
-            {'name': 'followed_id', 'value': followed_by.id},
+            {'name': 'following_id', 'value': following.id},
+            {'name': 'followed_by_id', 'value': followed_by.id},
         ]
 
         is_following = Follow.query.read_by_fields(fields)

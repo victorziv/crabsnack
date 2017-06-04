@@ -33,8 +33,8 @@ class QueryFollow(object):
 
         query = """
             SELECT
-                follower_id,
-                followed_id,
+                following_id,
+                followed_by_id,
                 started_following
             FROM follow
             WHERE %s = %s
@@ -61,8 +61,8 @@ class QueryFollow(object):
 
         query = """
             SELECT
-                follower_id,
-                followed_id,
+                following_id,
+                followed_by_id,
                 started_following
             FROM follow
             WHERE %s = %s
@@ -74,13 +74,13 @@ class QueryFollow(object):
         return fetch
     # ____________________________
 
-    def delete(self, follower_id, followed_id):
+    def delete(self, following_id, followed_by_id):
         query = """
             DELETE FROM follow
-            WHERE follower_id = %s
-            AND followed_id = %s
+            WHERE following_id = %s
+            AND followed_by_id = %s
         """
-        params = (follower_id, followed_id)
+        params = (following_id, followed_by_id)
 
         self.db.cursor.execute(query, params)
         self.db.conn.commit()

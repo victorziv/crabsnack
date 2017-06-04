@@ -11,15 +11,14 @@ class Follow(BaseModel):
 
     # ____________________________
 
-
     def save(self):
         attrs = dict(
-            follower_id=self.follower.id,
-            followed_id=self.followed.id
+            following_id=self.following.id,
+            followed_by_id=self.followed_by.id
         )
         self.query.create(attrs=attrs)
     # ____________________________
 
     @classmethod
     def remove(cls, f):
-        return cls.query.delete(f.follower_id, f.followed_id)
+        return cls.query.delete(f.following_id, f.followed_by_id)
