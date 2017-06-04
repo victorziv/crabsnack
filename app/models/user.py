@@ -5,11 +5,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import url_for, request
 from flask_login import UserMixin, AnonymousUserMixin
 from .. import login_manager
-from flask import current_app
-from app import db
+from flask import current_app as cup
+from app import dba
 from app.dbmodels.query_user import QueryUser
 from .role import Role
 from .base import BaseModel, Permission
+from .follow import Follow
 # ===========================
 
 
@@ -51,24 +52,14 @@ class User(UserMixin, BaseModel):
     """
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), unique=True, index=True)
-    username = db.Column(db.String(64), unique=True, index=True)
-    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-    password_hash = db.Column(db.String(128))
-    name = db.Column(db.String(64))
-    location  VARCHAR(64))
-    about_me TEXT,
-    member_since TIMESTAMP
-    last_seen TIMESTAMP
     """
-    query = QueryUser(db)
+    query = QueryUser(dba)
 
     # __________________________________
 
     def __init__(self, attrs={}):
         self.__dict__.update(attrs)
-        self.query = QueryUser(db)
+        self.query = QueryUser(dba)
 
     # __________________________________
 
@@ -88,6 +79,44 @@ class User(UserMixin, BaseModel):
         ]
     # ____________________________
 
+    def get_followers(self, limit=None, offset=None):
+
+        followers_dicts = self.query.read(
+            followed_id=self.id,
+            offset=offset,
+            limit=limit
+        )
+
+        followers = [User(attrs) for attrs in followers_dicts]
+
+        return followers
+
+    # ____________________________
+
+    def follow(self, user):
+        if not self.is_following(user):
+            f = Follow(attrs=dict(following=self, followed_by=user))
+            Follow.save(f)
+    # ____________________________
+
+    def is_following(self, user):
+        is_following = Follow.query.read_by_fields([
+            dict(name='followed_by_id', value=user.id),
+            dict(name='following_id', value=self.id)
+        ])
+
+        return is_following
+    # ____________________________
+
+    def is_followed_by(self, user):
+        is_followed_by = Follow.query.read_by_fields([
+            dict(name='followed_by_id', value=self.id),
+            dict(name='following_id', value=user.id)
+        ])
+
+        return is_followed_by
+    # ____________________________
+
     def gravatar(self, size=100, default='identicon', rating='g'):
 
         if request.is_secure:
@@ -95,8 +124,7 @@ class User(UserMixin, BaseModel):
         else:
             url = 'http://www.gravatar.com/avatar'
 
-        current_app.logger.info("Avatar hash: {}".format(self.avatar_hash))
-        print("Avatar hash: {}".format(self.avatar_hash))
+        cup.logger.debug("Avatar hash: {}".format(self.avatar_hash))
         if self.avatar_hash is None:
             self.avatar_hash = hashlib.md5(self.email.encode('utf-8')).hexdigest()
             User.update_user(params={'email': self.email, 'avatar_hash': self.avatar_hash})
@@ -127,17 +155,33 @@ class User(UserMixin, BaseModel):
             bool : True or False
 
         """
-        current_app.logger.info("User {} role: {}".format(self.email, self.role))
+        cup.logger.info("User {} role: {}".format(self.email, self.role))
         return self.role is not None and (
             self.permissions & permissions) == permissions
     # __________________________________
+
+    def exists_by_username(self, username):
+        userd = self.query.read_one_by_field(username=username)
+        if userd:
+            return True
+        else:
+            return False
+    # ____________________________
+
+    def exists_by_email(self, email):
+        userd = self.query.read_one_by_field(email=email)
+        if userd:
+            return True
+        else:
+            return False
+    # ____________________________
 
     def is_administrator(self):
         return self.can(Permission.ADMINISTER)
     # __________________________________
 
-    @staticmethod
-    def insert_initial_users():
+    @classmethod
+    def insert_initial_users(cls):
         users = [
             {
                 'email': 'victor_ziv@yahoo.com',
@@ -163,28 +207,51 @@ class User(UserMixin, BaseModel):
 
     # __________________________________
 
-    def save_user_oauth(self, email, username, social_id, role='user'):
+    @property
+    def following_count(self):
+        count = self.query.read_followed_by_count(self.id)
+        return count
+    # __________________________________
 
-        # Set user role
-        if role.lower() == 'admin':
-            # user is an administrator
-            role = Role.get_by_field(name='permissions', value=0xFF)
-        else:
-            role = Role.get_by_field(name='name', value=role.lower())
+    @following_count.setter
+    def following_count(self, value):
+        raise ValueError("Setting following count is not allowed")
 
-        current_app.logger.info(("Role: {}".format(role)))
+    # __________________________________
 
-        new_user_id = self.query.create_oauth(
-            email=email,
-            username=username,
-            social_id=social_id,
-            role_id=str(role.id)
-        )
+    @property
+    def followed_by_count(self):
+        count = self.query.read_following_count(self.id)
+        return count
+    # __________________________________
 
-        current_app.logger.info("New user ID: %r", new_user_id)
-        user = User.get_by_field(name='id', value=new_user_id)
-        return user
-    # ____________________________
+    @followed_by_count.setter
+    def followed_by_count(self, value):
+        raise ValueError("Setting followed by count is not allowed")
+    # __________________________________
+
+    def generate_auth_token(self, expiration):
+        s = Serializer(cup.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
+    # __________________________________
+
+    @staticmethod
+    def generate_fake(count=100):
+        from random import seed
+        import forgery_py
+        seed()
+
+        for i in range(count):
+            u = dict(
+                email=forgery_py.internet.email_address(),
+                username=forgery_py.name.full_name(),
+                password=forgery_py.lorem_ipsum.word(),
+                location=forgery_py.address.city(),
+                about_me=forgery_py.lorem_ipsum.sentence(),
+                member_since=forgery_py.date.date(True))
+
+            User.save(u)
+    # __________________________________
 
     @classmethod
     def save(cls, attrs):
@@ -207,48 +274,32 @@ class User(UserMixin, BaseModel):
 
         new_user_id = cls.query.create(attrs)
 
-        current_app.logger.info("New user ID: %r", new_user_id)
+        cup.logger.info("New user ID: %r", new_user_id)
         return cls.get_by_field(name='id', value=new_user_id)
     # ____________________________
 
-    def exists_by_username(self, username):
-        userd = self.query.read_one_by_field(username=username)
-        if userd:
-            return True
+    def save_user_oauth(self, email, username, social_id, role='user'):
+
+        # Set user role
+        if role.lower() == 'admin':
+            # user is an administrator
+            role = Role.get_by_field(name='permissions', value=0xFF)
         else:
-            return False
+            role = Role.get_by_field(name='name', value=role.lower())
+
+        cup.logger.info(("Role: {}".format(role)))
+
+        new_user_id = self.query.create_oauth(
+            email=email,
+            username=username,
+            social_id=social_id,
+            role_id=str(role.id)
+        )
+
+        cup.logger.info("New user ID: %r", new_user_id)
+        user = User.get_by_field(name='id', value=new_user_id)
+        return user
     # ____________________________
-
-    def exists_by_email(self, email):
-        userd = self.query.read_one_by_field(email=email)
-        if userd:
-            return True
-        else:
-            return False
-    # ____________________________
-
-    def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
-    # __________________________________
-
-    @staticmethod
-    def generate_fake(count=100):
-        from random import seed
-        import forgery_py
-        seed()
-
-        for i in range(count):
-            u = dict(
-                email=forgery_py.internet.email_address(),
-                username=forgery_py.name.full_name(),
-                password=forgery_py.lorem_ipsum.word(),
-                location=forgery_py.address.city(),
-                about_me=forgery_py.lorem_ipsum.sentence(),
-                member_since=forgery_py.date.date(True))
-
-            User.save(u)
-    # __________________________________
 
     def update_last_seen(self):
         self.last_seen = datetime.utcnow()
@@ -257,6 +308,12 @@ class User(UserMixin, BaseModel):
             update_key_value=self.email,
             update_params={'last_seen': self.last_seen})
     # __________________________________
+
+    def unfollow(self, user):
+        f = Follow.get_by_field(name='followed_by_id', value=user.id)
+        if f:
+            Follow.remove(f)
+    # ____________________________
 
     @classmethod
     def update_user(cls, params):
@@ -268,7 +325,7 @@ class User(UserMixin, BaseModel):
 
     @staticmethod
     def verify_auth_token(token):
-        s = Serializer(current_app.config['SECRET_KEY'])
+        s = Serializer(cup.config['SECRET_KEY'])
         try:
             data = s.loads(token)
         except:

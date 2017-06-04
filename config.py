@@ -74,6 +74,7 @@ class Config:
     }
 
     POSTS_PER_PAGE = 10
+    FOLLOWERS_PER_PAGE = 10
 
     # ___________________________________________
 
@@ -126,6 +127,7 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
+    APPTYPE = 'testing'
     TESTING = True
     SERVER_NAME = 'localhost'
     DBNAME = "%stest" % Config.PROJECT

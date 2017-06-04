@@ -31,13 +31,13 @@ class QueryInstallation(object):
         }
 
         try:
-            self.db.cur.execute(query, params)
+            self.db.cursor.execute(query, params)
 
         except DatabaseError as e:
             print('ERROR: %s' % e)
             self.db.conn.rollback()
 
-        fetch = self.db.cur.fetchone()
+        fetch = self.db.cursor.fetchone()
         if fetch is None:
             return fetch
 
@@ -60,9 +60,9 @@ class QueryInstallation(object):
             'order': AsIs(order_by)
         }
 
-        self.db.cur.execute(query, params)
+        self.db.cursor.execute(query, params)
 
-        fetch = self.db.cur.fetchall()
+        fetch = self.db.cursor.fetchall()
         if fetch is None:
             return []
 
@@ -96,16 +96,12 @@ class QueryInstallation(object):
 
         app.logger.debug("Record: %r", record)
         try:
-            self.db.cur.execute(query, record)
+            self.db.cursor.execute(query, record)
             self.db.conn.commit()
-            fetch = self.db.cur.fetchone()
+            fetch = self.db.cursor.fetchone()
             return fetch['id']
         except DatabaseError as e:
             app.logger.debug('ERROR: %s', e)
             self.db.conn.rollback()
-            return 
+            return
     # ____________________________
-
-
-
-

@@ -5,13 +5,13 @@ from flask_mail import Mail
 from flask_moment import Moment
 from flask_pagedown import PageDown
 from config import config
-from dbadmin import DBAdmin
+from app.dbmodels.query_admin import DBAdmin
 
 mail = Mail()
 moment = Moment()
 pagedown = PageDown()
 bootstrap = Bootstrap()
-db = DBAdmin()
+dba = DBAdmin()
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'auth.login'
@@ -29,7 +29,7 @@ def create_app(config_name):
     mail.init_app(app)
     moment.init_app(app)
     pagedown.init_app(app)
-    db.init_app(app)
+    dba.init_app(app)
     login_manager.init_app(app)
 
     # Setting app context specific configuration

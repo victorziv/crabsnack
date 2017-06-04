@@ -36,12 +36,12 @@ def upgrade(conn, **kwargs):
 
 
 def downgrade(conn, **kwargs):
-    drop_post_index(conn)
-    drop_posts_table(conn)
+    drop_index_posts(conn)
+    drop_table_posts(conn)
 # _______________________________
 
 
-def drop_post_index(conn):
+def drop_index_posts(conn):
     query = """
         DROP INDEX IF EXISTS postdate_index
     """
@@ -52,7 +52,7 @@ def drop_post_index(conn):
 # _______________________________
 
 
-def drop_posts_table(conn):
+def drop_table_posts(conn):
 
     query = """
         DROP TABLE IF EXISTS posts

@@ -1,3 +1,4 @@
+import sys
 import os
 import datetime
 import glob
@@ -16,8 +17,7 @@ class DBAdmin(object):
         self.conf = conf
     # __________________________________________
 
-    @staticmethod
-    def createdb(conn, newdb, newdb_owner=None):
+    def createdb(self, newdb, newdb_owner=None):
         """
         Creates a new DB.
 
@@ -47,31 +47,23 @@ class DBAdmin(object):
         None
 
         """
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        cur = conn.cursor()
+        self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         try:
             query = """CREATE DATABASE %(dbname)s WITH OWNER %(user)s"""
             params = {'dbname': AsIs(newdb), 'user': AsIs(newdb_owner)}
-            cur.execute(query, params)
+            self.cursor.execute(query, params)
         except psycopg2.ProgrammingError as pe:
             if 'already exists' in repr(pe):
                 pass
             else:
                 raise
-        finally:
-            cur.close()
     # ___________________________________________
 
-    @staticmethod
-    def dropdb(conn, dbtodrop):
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        cur = conn.cursor()
-        try:
-            query = """DROP DATABASE IF EXISTS %(dbname)s"""
-            params = {'dbname': AsIs(dbtodrop)}
-            cur.execute(query, params)
-        finally:
-            cur.close()
+    def dropdb(self, dbtodrop):
+        self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        query = """DROP DATABASE IF EXISTS %(dbname)s"""
+        params = {'dbname': AsIs(dbtodrop)}
+        self.cursor.execute(query, params)
     # ___________________________
 
     @staticmethod
@@ -93,10 +85,8 @@ class DBAdmin(object):
 
     def already_applied(self, name):
 
-        if name == 'baseline':
-            return False
+        print("Checking if already applied check name: {}".format(name))
 
-        print("Check if already applied check name: {}".format(name))
         query = """
             SELECT EXISTS(
                 SELECT 1 FROM changelog WHERE name = %s
@@ -105,8 +95,8 @@ class DBAdmin(object):
         """
         params = (name,)
 
-        self.cur.execute(query, params)
-        fetch = self.cur.fetchone()
+        self.cursor.execute(query, params)
+        fetch = self.cursor.fetchone()
         print("Exists fetch: {}".format(fetch))
         return fetch[0]
 
@@ -150,7 +140,7 @@ class DBAdmin(object):
         """
         params = {}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 
@@ -166,7 +156,7 @@ class DBAdmin(object):
         """
         params = {}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 
@@ -191,14 +181,14 @@ class DBAdmin(object):
         """
         params = {'table': AsIs(table)}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
 
         # Create an index on priority column
         query = """ CREATE INDEX priority_ind ON %(table)s (priority); """
         params = {'table': AsIs(table)}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 
@@ -221,7 +211,7 @@ class DBAdmin(object):
         """
         params = {}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
     # _____________________________
 
@@ -229,7 +219,7 @@ class DBAdmin(object):
         query = """GRANT ALL ON TABLE %(table)s TO %(user)s"""
         params = {'table': AsIs(table), 'user': AsIs('ivt')}
 
-        self.cur.execute(query, params)
+        self.cursor.execute(query, params)
         self.conn.commit()
 
     # ___________________________
@@ -238,7 +228,7 @@ class DBAdmin(object):
         print("DB: %r" % self.__dict__)
         print("Table to drop: %r" % table)
 
-        self.cur.execute("""
+        self.cursor.execute("""
             DROP TABLE IF EXISTS %s CASCADE
         """ % table)
 
@@ -254,24 +244,16 @@ class DBAdmin(object):
             self.grant_access_to_table(table)
     # ____________________________
 
-    def create_baseline(self, conn):
-        version = '0000'
-        name = 'baseline'
-        module_name = 'migrations.versions.{}_{}'.format(version, name)
-        mod = importlib.import_module(module_name)
-        mod.upgrade(conn, version, name)
-    # _____________________________
-
     def drop_all(self):
         for table in self.all_tables:
             self.drop_table(table)
     # _____________________________
 
     def init_app(self, app):
-        self.conn, self.cur = DBAdmin.connectdb(app.config['DB_CONN_URI'])
+        self.conn, self.cursor = DBAdmin.connectdb(app.config['DB_CONN_URI'])
         app.db = self
         app.db.conn = self.conn
-        app.db.cur = self.cur
+        app.db.cursor = self.cursor
         return app
     # _____________________________
 
@@ -280,7 +262,7 @@ class DBAdmin(object):
         migration_file = '0001.create_table-installationstep.sql'
         f = open(os.path.join(migrationdir, migration_file))
         try:
-            db.cur.execute(f.read())
+            db.cursor.execute(f.read())
             db.conn.commit()
         except Exception:
             db.conn.rollback()
@@ -301,9 +283,9 @@ class DBAdmin(object):
             """
             params = (version_number, name, datetime.datetime.utcnow())
 
-            self.cur.execute(query, params)
+            self.cursor.execute(query, params)
             self.conn.commit()
-            fetch = self.cur.fetchone()
+            fetch = self.cursor.fetchone()
             return fetch['id']
 
         except Exception as e:
@@ -331,3 +313,16 @@ class DBAdmin(object):
         return versions
 
     # ___________________________
+
+    def prompt(self, question):
+        from distutils.util import strtobool
+
+        sys.stdout.write('{} [y/n]: '.format(question))
+        val = input()
+        try:
+            ret = strtobool(val)
+        except ValueError:
+            sys.stdout.write('Please answer with a y/n\n')
+            return self.prompt(question)
+
+        return ret

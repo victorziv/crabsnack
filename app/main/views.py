@@ -11,7 +11,7 @@ from flask import (
 from flask_login import login_required, current_user
 from . import main
 from .forms import EditProfileForm, EditProfileAdminForm, PostForm
-from ..models import Permission, User, Role, Post
+from ..models import Permission, User, Role, Post, Follow
 from ..decorators import admin_required, permission_required
 # _______________________________
 
@@ -79,10 +79,79 @@ def moderate_comment():
 
 @main.route('/user/<email>')
 def user_profile(email):
-    u = User().get_by_field(name='email', value=email)
+    u = User.get_by_field(name='email', value=email)
     if u is None:
         abort(404)
     return render_template('user_profile.html', user=u, current_time=datetime.utcnow())
+# _______________________________
+
+
+@main.route('/follow/<email>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def follow(email):
+    u = User.get_by_field(name='email', value=email)
+    if u is None:
+        flash("Invalid user")
+        return redirect(url_for('.index'))
+    if current_user.is_following(u):
+        flash("You're already following this user")
+        return redirect(url_for('.user_profile', email=email))
+
+    current_user.follow(u)
+    flash("You're now following {}".format(u.email))
+    return redirect(url_for('.user_profile', email=email))
+# _______________________________
+
+
+@main.route('/unfollow/<email>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def unfollow(email):
+    u = User.get_by_field(name='email', value=email)
+    if u is None:
+        flash("Invalid user")
+        return redirect(url_for('.index'))
+
+    if not current_user.is_following(u):
+        flash("You're not following this user")
+        return redirect(url_for('.user_profile', email=email))
+
+    current_user.unfollow(u)
+    flash("You stopped following {}".format(u.email))
+    return redirect(url_for('.user_profile', email=email))
+# _______________________________
+
+
+@main.route('/followed_by/<email>')
+def followed_by(email):
+    u = User.get_by_field(name="email", value=email)
+    if u is None:
+        flash('Invalid user.')
+        return redirect(url_for('.index'))
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('page_size', current_app.config['FOLLOWERS_PER_PAGE'], type=int)
+    offset = (per_page * page) - per_page
+    items = Follow.get_followed_by(followed_by_id=u.id, offset=offset, limit=per_page)
+    followed_by = [{'user': item.followed_by, 'started_following': item.started_following} for item in items]
+    return render_template('followers.html', user=u, title="Followed by", endpoint='.followed_by', follows=followed_by)
+# _______________________________
+
+
+@main.route('/following/<email>')
+def following(email):
+    u = User.get_by_field(name="email", value=email)
+    if u is None:
+        flash('Invalid user.')
+        return redirect(url_for('.index'))
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('page_size', current_app.config['FOLLOW_PER_PAGE'], type=int)
+    offset = (per_page * page) - per_page
+    items = Follow.get_following(following=u.id, offset=offset, limit=per_page)
+    following = [{'user': item.following, 'started_following': item.started_following} for item in items]
+    return render_template('followers.html', user=u, title="Following", endpoint='.following', follows=following)
 # _______________________________
 
 

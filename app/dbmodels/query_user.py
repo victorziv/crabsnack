@@ -1,4 +1,5 @@
 from flask import current_app
+from flask import current_app as cap
 from psycopg2 import DatabaseError, IntegrityError
 from psycopg2.extensions import AsIs
 
@@ -36,9 +37,43 @@ class QueryUser(object):
 
         params = (AsIs(field), kwargs[field])
 
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchone()
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchone()
         return fetch
+    # ____________________________
+
+    def read_following_count(self, followed_by_id):
+
+        query = """
+            SELECT COUNT(*) AS count
+            FROM follow
+            WHERE followed_by_id = %s
+        """
+
+        params = (followed_by_id,)
+
+        self.db.cursor.execute(query, params)
+        cap.logger.debug("Query: {}".format(self.db.cursor.mogrify(query, params)))
+        fetch = self.db.cursor.fetchone()
+        cap.logger.debug("Fetch: {}".format(fetch))
+        return int(fetch['count'])
+    # ____________________________
+
+    def read_followed_by_count(self, following_id):
+
+        query = """
+            SELECT COUNT(*) AS count
+            FROM follow
+            WHERE following_id = %s
+        """
+
+        params = (following_id,)
+
+        self.db.cursor.execute(query, params)
+        cap.logger.debug("Query: {}".format(self.db.cursor.mogrify(query, params)))
+        fetch = self.db.cursor.fetchone()
+        cap.logger.debug("Fetch: {}".format(fetch))
+        return int(fetch['count'])
     # ____________________________
 
     def read_one_with_offset(self, offset):
@@ -65,9 +100,9 @@ class QueryUser(object):
 
         params = (offset,)
 
-        self.db.cur.mogrify(query, params)
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchone()
+        self.db.cursor.mogrify(query, params)
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchone()
         return fetch
     # ____________________________
 
@@ -84,8 +119,8 @@ class QueryUser(object):
         """
         params = ()
 
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchall()
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchall()
         return fetch
     # ____________________________
 
@@ -95,8 +130,8 @@ class QueryUser(object):
         """
         params = ()
 
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchone()
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchone()
         return fetch['count']
     # ____________________________
 
@@ -110,10 +145,10 @@ class QueryUser(object):
         query = query_template.format(field_name)
 
         params = (field_value,)
-        current_app.logger.debug(self.db.cur.mogrify(query, params))
+        current_app.logger.debug(self.db.cursor.mogrify(query, params))
 
-        self.db.cur.execute(query, params)
-        fetch = self.db.cur.fetchone()
+        self.db.cursor.execute(query, params)
+        fetch = self.db.cursor.fetchone()
 
         return fetch['id']
     # ____________________________
@@ -133,11 +168,11 @@ class QueryUser(object):
         current_app.logger.debug("values: {}".format(attrs.values()))
         params = tuple(attrs.values())
 
-        current_app.logger.debug(self.db.cur.mogrify(query, params))
+        current_app.logger.debug(self.db.cursor.mogrify(query, params))
 
         try:
-            self.db.cur.execute(query, params)
-            fetch = self.db.cur.fetchone()
+            self.db.cursor.execute(query, params)
+            fetch = self.db.cursor.fetchone()
             current_app.logger.debug("FETCH: {}".format(fetch))
             return fetch['id']
         except IntegrityError:
@@ -167,9 +202,9 @@ class QueryUser(object):
         params = (email, username, social_id, role_id)
 
         try:
-            self.db.cur.execute(query, params)
+            self.db.cursor.execute(query, params)
             self.db.conn.commit()
-            fetch = self.db.cur.fetchone()
+            fetch = self.db.cursor.fetchone()
             print("XXXXX==> FETCH: {}".format(fetch))
             return fetch['id']
 
@@ -188,7 +223,7 @@ class QueryUser(object):
             DELETE FROM users
         """
         params = ()
-        self.db.cur.execute(query, params)
+        self.db.cursor.execute(query, params)
         self.db.conn.commit()
     # ____________________________
 
@@ -196,7 +231,7 @@ class QueryUser(object):
         sql_template = "UPDATE users SET ({}) = %s WHERE {} = %s"
         query = sql_template.format(', '.join(update_params.keys()), update_key_name)
         params = (tuple(update_params.values()), update_key_value)
-        print(self.db.cur.mogrify(query, params))
-        self.db.cur.execute(query, params)
+        print(self.db.cursor.mogrify(query, params))
+        self.db.cursor.execute(query, params)
         self.db.conn.commit()
     # ____________________________

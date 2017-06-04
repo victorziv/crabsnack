@@ -1,5 +1,5 @@
 from flask import current_app
-from app import db
+from app import dba
 from app.dbmodels.query_installation import QueryInstallation
 from .base import BaseModel
 # ===========================
@@ -17,7 +17,7 @@ class Installation(BaseModel):
     # ____________________________
 
     def __init__(self):
-        self.query = QueryInstallation(db)
+        self.query = QueryInstallation(dba)
     # ____________________________
 
     def insert_steps(self):

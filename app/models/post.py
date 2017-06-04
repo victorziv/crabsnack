@@ -2,7 +2,7 @@ from flask import abort
 from markdown import markdown
 import bleach
 from flask import current_app
-from app import db
+from app import dba
 from .base import BaseModel
 from app.dbmodels.query_post import QueryPost
 from .user import User
@@ -12,18 +12,9 @@ from .user import User
 class Post(BaseModel):
 
     """
-
-    Columns:
-    --------
-    id = db.Column(db.Integer, primary_key=True)
-    body Text,
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    authorid = db.Column(db.Integer, db.ForeignKey('users.id'))
-    body_html Text
     """
-
     __tablename__ = 'posts'
-    query = QueryPost(db)
+    query = QueryPost(dba)
 
     # ____________________________
 

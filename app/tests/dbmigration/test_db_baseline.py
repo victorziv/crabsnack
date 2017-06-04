@@ -1,6 +1,6 @@
 import os
 from app import create_app
-from dbadmin import DBAdmin
+from app.dbmodels.query_admin import DBAdmin
 # ============================
 
 
