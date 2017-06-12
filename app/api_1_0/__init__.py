@@ -1,6 +1,7 @@
 from flask import Blueprint
 api = Blueprint('api', __name__)
-from . import authentication
-from . import users
-from . import errors
-from .ibox import installation
+
+from . import authentication  # noqa
+from . import users  # noqa
+from . import errors  # noqa
+from .ibox import installation  # noqa
