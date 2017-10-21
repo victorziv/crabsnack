@@ -38,7 +38,7 @@ manager.add_command("shell", Shell(
 )
 @manager.option(
     'action',
-    choices=['upgrade', 'downgrade'],
+    choices=['upgrade', 'downgrade', 'reset'],
     help="""
         Actions:
             upgrade - upgrade DB up to provided version or the last available.
@@ -63,6 +63,8 @@ def db(configkey, action, version=None):
             dba.db_upgrade(version)
         elif action == 'downgrade':
             dba.db_downgrade(version)
+        elif action == 'reset':
+            reset_db(configkey)
         else:
             print("ERROR: unsupported action {}".format(action))
             sys.exit(1)
