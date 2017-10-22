@@ -8,9 +8,11 @@ def create_table_comments(conn):
             body TEXT,
             body_html TEXT,
             commentdate TIMESTAMP WITHOUT TIME ZONE DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
-            author_id INTEGER NOT NULL,
-            post_id INTEGER NOT NULL,
+            authorid INTEGER NOT NULL,
+            postid INTEGER NOT NULL,
             UNIQUE(author_id, post_id)
+            FOREIGN KEY authorid REFERENCES users(id),
+            FOREIGN KEY postid REFERENCES posts(id)
         );
     """
     params = ()
