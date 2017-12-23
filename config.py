@@ -7,7 +7,7 @@ class Config:
     BASEDIR = os.path.abspath(os.path.dirname(__file__))
     PROJECT = 'krabs'
     PROJECT_USER = 'krabs'
-    APP = 'crabtest'
+    APP = 'crabsnack'
     SECRET_KEY = os.environ.get('SECRET_KEY') \
         or 'comment aller a la gare central'
     CRAB_ADMIN = os.environ.get('CRAB_ADMIN') \

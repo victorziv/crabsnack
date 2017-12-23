@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_login import LoginManager
-from flask_bootstrap import Bootstrap
 from flask_mail import Mail
 from flask_moment import Moment
 from flask_pagedown import PageDown
@@ -10,7 +9,6 @@ from app.dbmodels.query_admin import DBAdmin
 mail = Mail()
 moment = Moment()
 pagedown = PageDown()
-bootstrap = Bootstrap()
 dba = DBAdmin()
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -25,7 +23,6 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     app.logger.info("PROJECT: %r", app.config['PROJECT'])
 
-    bootstrap.init_app(app)
     mail.init_app(app)
     moment.init_app(app)
     pagedown.init_app(app)
