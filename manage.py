@@ -1,9 +1,15 @@
 import os
-from app.dbmodels.query_admin import DBAdmin
+from app.dbmodels.admin import DBAdmin
 from config import config
 from app import create_app, dba
 from app import models
 from flask_script import Manager, Shell
+
+from config import Configurator
+Configurator.configure()
+Configurator.set_logging(name='trackerivt', console_logging=True)
+
+from config import logger  # noqa
 
 CONFIG_CHOISES = ['development', 'testing', 'production']
 CONFIG_KEY = os.getenv('FLASK_CONFIG') or 'default'
