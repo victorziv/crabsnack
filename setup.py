@@ -34,7 +34,7 @@ if sys.argv[-1] == 'test':
 # ___________________________________
 
 setup(
-    name='Crabsnack',
+    name='crabsnack',
     version=__version__,  # noqa
     description='The best sea food in the world',
     long_description=readme(),
@@ -42,6 +42,11 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
 
     include_package_data=True,
